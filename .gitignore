@@ -15,8 +15,15 @@
 
 # Typechain output
 /types
-
+ 
 # Hardhat coverage reports
 /coverage
 
 .env
+
+# Despliegues de la red local (Hardhat Network)
+/ignition/deployments/chain-31337
+
+# Archivos ocultos de macOS
+.DS_Store
+**/.DS_Store
