@@ -31,7 +31,7 @@ contract TraDeckNFT is ERC721URIStorage {
 
     mapping(uint256 => Trade) public trades;
 
-    function ListForSale(uint256 tokenId, uint256 price) public {
+    function listForSale(uint256 tokenId, uint256 price) public {
         require(ownerOf(tokenId) == msg.sender, "Solo el propietario puede listar la carta");
         require(price > 0, "El precio debe ser mayor a cero");
         require(trades[tokenId].state == TradeState.NotListed, "La carta ya esta listada");
