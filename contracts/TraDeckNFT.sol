@@ -47,5 +47,36 @@ contract TraDeckNFT is ERC721URIStorage {
 
     }
 
+    //Compra y Liquidacion
+    function buyCard(uint256 tokenId) public payable {
+        Trade storage trade = trades[tokenId];
+
+        require(trade.state == TradeState.Listed, "La carta no esta listada para la venta");
+        require(msg.value == trade.price, "El valor enviado no coincide con el precio de la carta");
+        require(trade.seller != msg.sender, "No puedes comprar tu propia carta");
+
+        trade.buyer = msg.sender;
+        trade.state = TradeState.InEscrow;
+    }
+
+    // Función final: El comprador confirma que todo está bien y se libera todo.
+    function confirmDelivery(uint256 tokenId) public {
+        Trade storage trade = trades[tokenId];
+        
+        require(trade.state == TradeState.InEscrow, "La transaccion no esta en Escrow");
+        require(msg.sender == trade.buyer, "Solo el comprador puede confirmar la entrega");
+
+        address seller = trade.seller;
+        address buyer = trade.buyer;
+        uint256 price = trade.price;
+
+        delete trades[tokenId];
+
+        (bool success, ) = payable(seller).call{value: price}("");
+        require(success, "Fallo al enviar el dinero al vendedor");
+
+        _transfer(address(this), buyer, tokenId);
+    }
+
 
 }
