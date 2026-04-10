@@ -9,7 +9,7 @@ contract TraDeckCoin is ERC20 {
         _mint(msg.sender, 1000000 * 10 ** decimals());
     }
 
-    function airdrop(address acount) public {
-        _transfer(msg.sender, acount, 1000 * 10 ** decimals());
+    function airdrop() public {
+        _mint(msg.sender, 1000 * 10 ** decimals());
     }
 }
