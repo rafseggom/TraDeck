@@ -21,6 +21,14 @@ describe("TraDeck - Pruebas del Ecosistema con Moneda", function () {
         const coinAddress = await coin.getAddress();
         tradeck = await ethers.deployContract("TraDeckNFT", [coinAddress]);
     });
+    
+    it("Debería permitir a un usuario crear una carta", async function () {
+        const tokenURI = "ipfs://example-token-uri";
+
+        await tradeck.connect(seller).mintCard(tokenURI);
+
+        expect(await tradeck.ownerOf(0)).to.equal(seller.address);
+    });
 
     it("Debería ejecutar una compraventa completa y segura con TDKC", async function () {
         const precio = 100n; // 100 TDKC
