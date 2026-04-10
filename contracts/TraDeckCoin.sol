@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract TraDeckCoin is ERC20 {
     
-    contructor() ERC20("TraDeck Coin", "TDC") {
+    constructor() ERC20("TraDeck Coin", "TDC") {
         _mint(msg.sender, 1000000 * 10 ** decimals());
     }
 

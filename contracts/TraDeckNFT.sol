@@ -2,12 +2,16 @@
 pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract TraDeckNFT is ERC721URIStorage {
 
+    IERC20 public paymentToken;
     uint256 private _nextTokenId;
 
-    constructor() ERC721("TraDeck", "TDK") {}
+    constructor(address _tokenAddress) ERC721("TraDeck", "TDK") {
+        paymentToken = IERC20(_tokenAddress);
+    }
 
     function mintCard(string memory tokenURI) public returns (uint256) {
         uint256 tokenId = _nextTokenId++;
@@ -48,12 +52,11 @@ contract TraDeckNFT is ERC721URIStorage {
     }
 
     //Compra y Liquidacion
-    function buyCard(uint256 tokenId) public payable {
+    function buyCard(uint256 tokenId) public {
         Trade storage trade = trades[tokenId];
 
         require(trade.state == TradeState.Listed, "La carta no esta listada para la venta");
-        require(msg.value == trade.price, "El valor enviado no coincide con el precio de la carta");
-        require(trade.seller != msg.sender, "No puedes comprar tu propia carta");
+        require(paymentToken.transferFrom(msg.sender, address(this), trade.price), "Fallo al transferir el pago");
 
         trade.buyer = msg.sender;
         trade.state = TradeState.InEscrow;
@@ -72,8 +75,7 @@ contract TraDeckNFT is ERC721URIStorage {
 
         delete trades[tokenId];
 
-        (bool success, ) = payable(seller).call{value: price}("");
-        require(success, "Fallo al enviar el dinero al vendedor");
+        require(paymentToken.transfer(seller, price), "Fallo al transferir el pago al vendedor");
 
         _transfer(address(this), buyer, tokenId);
     }
