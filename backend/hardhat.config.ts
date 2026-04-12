@@ -7,6 +7,10 @@ dotenv.config();
 const config: HardhatUserConfig = {
   plugins: [toolboxPlugin],
   solidity: "0.8.28",
+  paths: {
+    artifacts: "../frontend/src/artifacts",
+  },
+
   networks: {
     sepolia: {
       type: "http",
