@@ -60,4 +60,32 @@ describe("TraDeck - Pruebas del Ecosistema con Moneda", function () {
         // El vendedor debe tener las 100 monedas en su saldo
         expect(await coin.balanceOf(seller.address)).to.equal(precio);
     });
+
+    it("Debería permitir un trueque directo entre dos usuarios", async function () {
+        // 1. Vendedor crea la carta 0, Comprador crea la carta 1
+        await tradeck.connect(seller).mintCard("ipfs://card0");
+        await tradeck.connect(buyer).mintCard("ipfs://card1");
+
+        // 2. Vendedor lista la carta 0 para trueque por la carta 1
+        await tradeck.connect(seller).proposeSwap(0, 1);
+
+        // 3. Comprador acepta el trueque
+        await tradeck.connect(buyer).acceptSwap(0);
+
+        expect(await tradeck.ownerOf(0)).to.equal(buyer.address);
+        expect(await tradeck.ownerOf(1)).to.equal(seller.address);
+    })
+
+    it("Debería permitir a un usuario cancelar un trueque", async function () {
+        // 1. Vendedor crea la carta
+        await tradeck.connect(seller).mintCard("ipfs://card0");
+        await tradeck.connect(buyer).mintCard("ipfs://card1");
+        // 2. Vendedor lista la carta para trueque por la carta 1
+        await tradeck.connect(seller).proposeSwap(0, 1);
+        // 3. Vendedor cancela el trueque
+        await tradeck.connect(seller).cancelSwap(0);
+        // Comprobamos que el trueque ya no existe
+        await expect(tradeck.connect(buyer).acceptSwap(0)).to.be.revertedWith("La oferta de intercambio no esta activa");
+    });
+        
 });

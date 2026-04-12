@@ -81,7 +81,7 @@ contract TraDeckNFT is ERC721URIStorage {
     }
 
     //TRUEQUE
-    sctruct SwapOffer {
+    struct SwapOffer {
         address proposer;
         uint256 proposerTokenId;
         uint256 wantedTokenId;
