@@ -80,5 +80,51 @@ contract TraDeckNFT is ERC721URIStorage {
         _transfer(address(this), buyer, tokenId);
     }
 
+    //TRUEQUE
+    sctruct SwapOffer {
+        address proposer;
+        uint256 proposerTokenId;
+        uint256 wantedTokenId;
+        bool isActive;
+    }
+
+    //Diccionario con las ofertas de trueque
+    mapping(uint256 => SwapOffer) public swapOffers;
+
+    //Proponer intercambio
+    function proposeSwap(uint256 myTokenId, uint256 wantedTokenId) public {
+        require(ownerOf(myTokenId) == msg.sender, "Solo el propietario puede proponer un intercambio");
+        require(ownerOf(wantedTokenId) != address(0), "La carta que deseas no existe");
+        require(ownerOf(wantedTokenId) != msg.sender, "No puedes intercambiar una carta contigo mismo");
+
+        swapOffers[myTokenId] = SwapOffer({
+            proposer: msg.sender,
+            proposerTokenId: myTokenId,
+            wantedTokenId: wantedTokenId,
+            isActive: true
+        });
+    }
+
+    //Aceptar intercambio
+    function acceptSwap(uint256 proposerTokenId) public {
+        SwapOffer memory offer = swapOffers[proposerTokenId];
+
+        require(offer.isActive, "La oferta de intercambio no esta activa");
+        require(ownerOf(offer.wantedTokenId) == msg.sender, "Solo el propietario de la carta deseada puede aceptar el intercambio");
+        require(ownerOf(offer.proposerTokenId) == offer.proposer, "El proponente ya no es el propietario de la carta ofrecida");
+
+        //Seguridad
+        delete swapOffers[proposerTokenId];
+
+        _transfer(offer.proposer, msg.sender, offer.proposerTokenId);
+        _transfer(msg.sender, offer.proposer, offer.wantedTokenId);
+    }
+
+    //Cancelar intercambio
+    function cancelSwap(uint256 myTokenId) public {
+        require(ownerOf(myTokenId) == msg.sender, "Solo el propietario puede cancelar un intercambio");
+        delete swapOffers[myTokenId];
+    }
+
 
 }
