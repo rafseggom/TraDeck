@@ -1,3 +1,54 @@
+# TraDeck - Backend (Smart Contracts)
+
+Bienvenido a la sección del Backend de TraDeck. Este directorio contiene todos los Smart Contracts, scripts de despliegue y tests que conforman el núcleo financiero y descentralizado de la aplicación.
+
+## Smart Contracts Principales
+Todo el ecosistema se basa en la interacción de dos contratos inteligentes:
+
+1. **TraDeckCoin (TDKC):** El token ERC20 nativo. Actúa como el dinero del juego.
+   - Incluye una función pública `airdrop()` que actúa como "banco central", regalando 1.000 TDKC a cualquier usuario nuevo para que pueda empezar a jugar y testear.
+
+2. **TraDeckNFT (El Mercado):** Contrato que gestiona las cartas (ERC721) y el sistema de tienda.
+   - **Escrow Seguro (Compraventa):** Sistema que retiene los tokens del comprador (`buyCard`) en el contrato inteligente hasta que confirma que ha recibido la carta (`confirmDelivery`), momento en el que el vendedor recibe los fondos.
+   - **Intercambio Atómico (Trueque):** Permite a los usuarios intercambiar cartas de forma directa y simultánea (`proposeSwap`, `acceptSwap`), eliminando la posibilidad de estafas.
+
+## Guía de uso rápido (backend)
+
+Sigue estos pasos para arrancar el entorno de desarrollo local, compilar los contratos y conectarlos con la interfaz.
+
+## 1️. Instalación Inicial
+Si es la primera vez que clonas el repositorio o si has borrado la carpeta `node_modules`, instala todas las dependencias necesarias:
+```bash
+cd backend
+npm install
+```
+
+## 2. Compilación de Contratos
+Cada vez que modifiques el código de un archivo `.sol` dentro de `contracts/`, debes recompilar el proyecto. Esto genera nuevos archivos ABI y los envía automáticamente al Frontend:
+```bash
+npx hardhat compile
+```
+
+## 3. Ejecutar Pruebas
+Para ejecutar los tests del proyecto:
+```bash
+npx hardhat test
+```
+
+## 4. Levantar el Servidor Local (Nodo)
+Para simular la blockchain de Ethereum y poder interactuar con ella desde la página web, enciende el nodo local. **Deja esta terminal abierta**:
+```bash
+npx hardhat node
+```
+
+## 5. Deslpiegue de Contratos
+Con el nodo encendido, abre **otra terminal**, asegúrate de estar en la carpeta ``backend`` y ejecuta el script de despliegue:
+```bash
+npx hardhat ignition deploy ignition/modules/TraDeck.ts --network localhost
+```
+
+**Importante para el Frontend**: > Al ejecutar el comando de despliegue, la terminal te devolverá dos direcciones (ej: 0x5Fb...). Cópialas y úsalas en el código de React para conectar la dApp con los contratos TraDeckCoin y TraDeckNFT
+
 # Sample Hardhat 3 Beta Project (`mocha` and `ethers`)
 
 This project showcases a Hardhat 3 Beta project using `mocha` for tests and the `ethers` library for Ethereum interactions.
