@@ -3,7 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:solidity": "hardhat test solidity",
+    "test:mocha": "hardhat test test/Counter.ts test/TraDeck.test.ts",
+    "node": "hardhat node",
+    "deploy:local": "hardhat ignition deploy ignition/modules/Counter.ts",
+    "deploy:sepolia": "hardhat ignition deploy --network sepolia ignition/modules/Counter.ts"
   },
   "keywords": [],
   "author": "",
