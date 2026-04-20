@@ -10,6 +10,7 @@ import {
 import {
   aceptarIntercambio,
   cancelarIntercambio,
+  comprobarVeracidadCarta,
   comprarCarta,
   confirmarEntrega,
   formatearErrorBlockchain,
@@ -34,6 +35,7 @@ import type {
   EventoCartaHistorial,
   NotificacionUI,
   RedClave,
+  VeracidadCartaResultado,
 } from "./types";
 
 interface WalletEstado {
@@ -67,6 +69,7 @@ interface AppContextValue {
   aceptarSwap: (proposerTokenId: number) => Promise<void>;
   cancelarSwap: (myTokenId: number) => Promise<void>;
   cargarHistorialCarta: (tokenId: number) => Promise<EventoCartaHistorial[]>;
+  verificarVeracidadCarta: (tokenId: number) => Promise<VeracidadCartaResultado | null>;
   quitarNotificacion: (id: number) => void;
 }
 
@@ -101,6 +104,7 @@ export function AppProvider({ children }: PropsWithChildren): JSX.Element {
   const [cargandoDatos, setCargandoDatos] = useState<boolean>(false);
   const [procesandoTx, setProcesandoTx] = useState<boolean>(false);
   const [notificaciones, setNotificaciones] = useState<NotificacionUI[]>([]);
+  const [sesionWalletActiva, setSesionWalletActiva] = useState<boolean>(false);
 
   const pushNotificacion = useCallback((tipo: NotificacionUI["tipo"], mensaje: string) => {
     setNotificaciones((actual) => [{ id: Date.now() + Math.floor(Math.random() * 999), tipo, mensaje }, ...actual].slice(0, 6));
@@ -149,6 +153,7 @@ export function AppProvider({ children }: PropsWithChildren): JSX.Element {
         address,
         chainId: Number(network.chainId),
       });
+      setSesionWalletActiva(true);
 
       pushNotificacion("ok", "Cartera conectada correctamente");
     } catch (error) {
@@ -157,9 +162,19 @@ export function AppProvider({ children }: PropsWithChildren): JSX.Element {
   }, [pushNotificacion]);
 
   const desconectarWallet = useCallback(() => {
+    setSesionWalletActiva(false);
     setWallet({ address: null, chainId: null });
     setSaldoTdc("0");
     setCartasUsuario([]);
+
+    // Best effort: some wallets support revoking the site's account permission.
+    void window.ethereum
+      ?.request?.({
+        method: "wallet_revokePermissions",
+        params: [{ eth_accounts: {} }],
+      })
+      .catch(() => undefined);
+
     pushNotificacion("info", "Sesion local de cartera cerrada");
   }, [pushNotificacion]);
 
@@ -283,6 +298,20 @@ export function AppProvider({ children }: PropsWithChildren): JSX.Element {
     [pushNotificacion, redConfig],
   );
 
+  const verificarVeracidadCarta = useCallback(
+    async (tokenId: number): Promise<VeracidadCartaResultado | null> => {
+      try {
+        const resultado = await comprobarVeracidadCarta(redConfig, tokenId);
+        pushNotificacion(resultado.esValida ? "ok" : "error", resultado.resumen);
+        return resultado;
+      } catch (error) {
+        pushNotificacion("error", formatearErrorBlockchain(error));
+        return null;
+      }
+    },
+    [pushNotificacion, redConfig],
+  );
+
   useEffect(() => {
     const autoconectar = async () => {
       if (!tieneMetaMask()) {
@@ -301,6 +330,7 @@ export function AppProvider({ children }: PropsWithChildren): JSX.Element {
           address: cuentas[0],
           chainId: Number(network.chainId),
         });
+        setSesionWalletActiva(true);
       } catch {
         // Ignorado intencionalmente
       }
@@ -316,11 +346,17 @@ export function AppProvider({ children }: PropsWithChildren): JSX.Element {
 
     const onAccountsChanged = (accounts: string[]) => {
       if (accounts.length === 0) {
+        setSesionWalletActiva(false);
         setWallet({ address: null, chainId: null });
         return;
       }
 
+      if (!sesionWalletActiva) {
+        return;
+      }
+
       setWallet((actual) => ({ ...actual, address: accounts[0] }));
+      pushNotificacion("info", `Cuenta detectada: ${resumirDireccion(accounts[0])}`);
     };
 
     const onChainChanged = (chainIdHex: string) => {
@@ -334,7 +370,7 @@ export function AppProvider({ children }: PropsWithChildren): JSX.Element {
       window.ethereum?.removeListener?.("accountsChanged", onAccountsChanged);
       window.ethereum?.removeListener?.("chainChanged", onChainChanged);
     };
-  }, []);
+  }, [pushNotificacion, sesionWalletActiva]);
 
   useEffect(() => {
     void refrescarDatos();
@@ -372,6 +408,7 @@ export function AppProvider({ children }: PropsWithChildren): JSX.Element {
       aceptarSwap,
       cancelarSwap,
       cargarHistorialCarta,
+      verificarVeracidadCarta,
       quitarNotificacion,
     }),
     [
@@ -399,6 +436,7 @@ export function AppProvider({ children }: PropsWithChildren): JSX.Element {
       aceptarSwap,
       cancelarSwap,
       cargarHistorialCarta,
+      verificarVeracidadCarta,
       quitarNotificacion,
     ],
   );

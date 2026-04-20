@@ -66,10 +66,20 @@ export interface EstadoLecturaCadena {
 export interface EventoCartaHistorial {
   txHash: string;
   blockNumber: number;
+  blockHash: string;
+  parentHash: string;
+  previousBlockHash: string;
+  parentHashValido: boolean;
   timestamp: number;
   from: string;
   to: string;
   tipo: string;
+}
+
+export interface VeracidadCartaResultado {
+  esValida: boolean;
+  resumen: string;
+  detalles: string[];
 }
 
 export interface ResultadoBusquedaCarta {

@@ -1,7 +1,17 @@
 import { ZeroAddress, formatUnits, parseUnits } from "ethers";
 import { crearContratos, obtenerBrowserProvider, obtenerReadProvider } from "./contracts";
 import { leerMetadataDesdeTokenUri } from "./ipfs";
-import { EstadoTrade, type CartaCadena, type ConfigRed, type EstadoLecturaCadena, type EstadoSwapDetalle, type EstadoTradeDetalle, type EventoCartaHistorial, type JuegoCarta } from "./types";
+import {
+  EstadoTrade,
+  type CartaCadena,
+  type ConfigRed,
+  type EstadoLecturaCadena,
+  type EstadoSwapDetalle,
+  type EstadoTradeDetalle,
+  type EventoCartaHistorial,
+  type JuegoCarta,
+  type VeracidadCartaResultado,
+} from "./types";
 
 function esAddressIgual(a: string, b: string): boolean {
   return a.toLowerCase() === b.toLowerCase();
@@ -253,6 +263,10 @@ export async function obtenerHistorialCarta(red: ConfigRed, tokenId: number): Pr
       const from = String(evento.args?.from ?? ZeroAddress);
       const to = String(evento.args?.to ?? ZeroAddress);
       const block = await provider.getBlock(evento.blockNumber);
+      const previousBlock =
+        evento.blockNumber > 0 ? await provider.getBlock(evento.blockNumber - 1) : null;
+      const parentHash = String(block?.parentHash ?? "");
+      const previousBlockHash = String(previousBlock?.hash ?? "");
 
       let tipo = "Transferencia";
       if (esAddressIgual(from, ZeroAddress)) {
@@ -266,6 +280,13 @@ export async function obtenerHistorialCarta(red: ConfigRed, tokenId: number): Pr
       return {
         txHash: String(evento.transactionHash),
         blockNumber: Number(evento.blockNumber),
+        blockHash: String(evento.blockHash ?? block?.hash ?? ""),
+        parentHash,
+        previousBlockHash,
+        parentHashValido:
+          parentHash.length > 0 &&
+          previousBlockHash.length > 0 &&
+          esAddressIgual(parentHash, previousBlockHash),
         timestamp: Number(block?.timestamp ?? 0),
         from,
         to,
@@ -275,6 +296,96 @@ export async function obtenerHistorialCarta(red: ConfigRed, tokenId: number): Pr
   );
 
   return historial.sort((a, b) => b.blockNumber - a.blockNumber);
+}
+
+export async function comprobarVeracidadCarta(
+  red: ConfigRed,
+  tokenId: number,
+): Promise<VeracidadCartaResultado> {
+  const provider = obtenerReadProvider(red);
+  const { nft } = crearContratos(provider, red);
+
+  const detalles: string[] = [];
+  let esValida = true;
+
+  const historialDesc = await obtenerHistorialCarta(red, tokenId);
+  if (historialDesc.length === 0) {
+    return {
+      esValida: false,
+      resumen: "No hay eventos Transfer para este token en blockchain.",
+      detalles: ["Sin eventos on-chain, no se puede verificar la autenticidad."],
+    };
+  }
+
+  const historialAsc = [...historialDesc].sort((a, b) => a.blockNumber - b.blockNumber);
+
+  const primerEvento = historialAsc[0];
+  if (!esAddressIgual(primerEvento.from, ZeroAddress)) {
+    esValida = false;
+    detalles.push("El primer evento no parte de la direccion cero (mint inconsistente).");
+  }
+
+  let ownerCalculado = primerEvento.to;
+
+  for (let i = 0; i < historialAsc.length; i += 1) {
+    const evento = historialAsc[i];
+
+    const block = await provider.getBlock(evento.blockNumber);
+    if (!block || String(block.hash ?? "") !== evento.blockHash) {
+      esValida = false;
+      detalles.push(`Bloque ${evento.blockNumber} no coincide con el hash registrado en el evento.`);
+    }
+
+    if (String(block?.parentHash ?? "") !== evento.parentHash) {
+      esValida = false;
+      detalles.push(`Bloque ${evento.blockNumber} no coincide en parentHash con su lectura on-chain.`);
+    }
+
+    if (!evento.parentHashValido) {
+      esValida = false;
+      detalles.push(`Bloque ${evento.blockNumber} no enlaza correctamente al bloque N-1.`);
+    }
+
+    const receipt = await provider.getTransactionReceipt(evento.txHash);
+    if (!receipt || String(receipt.blockHash ?? "") !== evento.blockHash) {
+      esValida = false;
+      detalles.push(`Transaccion ${evento.txHash} no cuadra con su bloque de historial.`);
+    }
+
+    if (i > 0 && !esAddressIgual(evento.from, ownerCalculado)) {
+      esValida = false;
+      detalles.push(
+        `Cadena de propietario inconsistente en bloque ${evento.blockNumber} (from=${evento.from}, esperado=${ownerCalculado}).`,
+      );
+    }
+
+    ownerCalculado = evento.to;
+  }
+
+  const ownerOnChain = String(await nft.ownerOf(BigInt(tokenId)));
+  if (!esAddressIgual(ownerOnChain, ownerCalculado)) {
+    esValida = false;
+    detalles.push("El propietario final calculado no coincide con ownerOf en contrato.");
+  }
+
+  const tokenUri = String(await nft.tokenURI(BigInt(tokenId)));
+  const metadata = await leerMetadataDesdeTokenUri(tokenUri);
+  if (!metadata?.serialNumber || metadata.serialNumber.trim().length === 0) {
+    esValida = false;
+    detalles.push("La metadata no incluye serialNumber valido.");
+  }
+
+  if (esValida) {
+    detalles.push("Hash de bloques, receipts, propietario y metadata coinciden en toda la trazabilidad.");
+  }
+
+  return {
+    esValida,
+    resumen: esValida
+      ? "Carta autentica: la trazabilidad on-chain es integra."
+      : "Carta con inconsistencias detectadas en la trazabilidad on-chain.",
+    detalles,
+  };
 }
 
 export function formatearErrorBlockchain(error: unknown): string {

@@ -44,6 +44,7 @@ export function CardTile({ carta, children }: CardTileProps): JSX.Element {
 
         <div className="card-links">
           <Link to={`/historial?tokenId=${carta.tokenId}`}>Ver historial</Link>
+          <Link to={`/historial?tokenId=${carta.tokenId}&check=1`}>Comprobar veracidad</Link>
         </div>
 
         {children ? <div className="card-actions">{children}</div> : null}
