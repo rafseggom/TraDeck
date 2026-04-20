@@ -5,6 +5,7 @@
 
 # Compilation output
 /dist
+**/dist/
 
 # pnpm deploy output
 /bundle
@@ -36,6 +37,9 @@
 **/types/
 **/typechain-types/
 **/coverage/
+**/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
 
 # Ignorar los despliegues del nodo local (chain 31337)
 **/ignition/deployments/chain-31337/
