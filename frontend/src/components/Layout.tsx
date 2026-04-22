@@ -96,6 +96,9 @@ export function Layout(): JSX.Element {
         <NavLink to="/historial" className={({ isActive }) => claseNavLink(isActive)}>
           Historial
         </NavLink>
+        <NavLink to="/documentacion" className={({ isActive }) => claseNavLink(isActive)}>
+          Documentacion
+        </NavLink>
       </nav>
 
       {advertenciaRed ? <div className="warning-banner">{advertenciaRed}</div> : null}

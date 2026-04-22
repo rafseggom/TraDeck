@@ -64,8 +64,27 @@ function normalizarSwap(data: any): EstadoSwapDetalle {
 async function tokenIdsDetectados(red: ConfigRed): Promise<number[]> {
   const provider = obtenerReadProvider(red);
   const { nft } = crearContratos(provider, red);
+  const bloqueActual = await provider.getBlockNumber();
+  const bloqueInicio = Math.max(0, red.deployBlock);
+  const eventos: any[] = [];
 
-  const eventos = await nft.queryFilter(nft.filters.Transfer(), red.deployBlock, "latest");
+  if (bloqueInicio > bloqueActual) {
+    return [];
+  }
+
+  // Alchemy Free tier: máximo 10 bloques por eth_getLogs
+  // Usamos 5 para ser conservador y evitar timeouts
+  const tamanoTramo = 5;
+  for (let desde = bloqueInicio; desde <= bloqueActual; desde += tamanoTramo) {
+    const hasta = Math.min(desde + tamanoTramo - 1, bloqueActual);
+    try {
+      const tramo = await nft.queryFilter(nft.filters.Transfer(), desde, hasta);
+      eventos.push(...(tramo as any[]));
+    } catch (error) {
+      console.warn(`[blockchain] Fallo consultando eventos en bloques ${desde}-${hasta}:`, error);
+      // Continuamos con el siguiente tramo
+    }
+  }
   const ids = new Set<number>();
 
   for (const evento of eventos as any[]) {
@@ -84,12 +103,39 @@ async function construirCarta(red: ConfigRed, tokenId: number): Promise<CartaCad
   const { nft } = crearContratos(provider, red);
 
   try {
-    const [owner, tokenUri, tradeRaw, swapRaw] = await Promise.all([
-      nft.ownerOf(BigInt(tokenId)),
-      nft.tokenURI(BigInt(tokenId)),
-      nft.trades(BigInt(tokenId)),
-      nft.swapOffers(BigInt(tokenId)),
-    ]);
+    // Consultar datos en paralelo pero con manejo independiente de errores
+    let owner: string = ZeroAddress;
+    let tokenUri: string = "";
+    let tradeRaw: any = null;
+    let swapRaw: any = null;
+
+    try {
+      owner = String(await nft.ownerOf(BigInt(tokenId)));
+    } catch (error) {
+      console.warn(`[blockchain] Error leyendo owner de tokenId ${tokenId}:`, error);
+      return null; // Token probablemente no existe
+    }
+
+    try {
+      tokenUri = String(await nft.tokenURI(BigInt(tokenId)));
+    } catch (error) {
+      console.warn(`[blockchain] Error leyendo tokenURI de tokenId ${tokenId}:`, error);
+      return null; // No podemos continuar sin tokenURI
+    }
+
+    try {
+      tradeRaw = await nft.trades(BigInt(tokenId));
+    } catch (error) {
+      console.warn(`[blockchain] Error leyendo trade de tokenId ${tokenId}:`, error);
+      tradeRaw = {};
+    }
+
+    try {
+      swapRaw = await nft.swapOffers(BigInt(tokenId));
+    } catch (error) {
+      console.warn(`[blockchain] Error leyendo swap de tokenId ${tokenId}:`, error);
+      swapRaw = {};
+    }
 
     const trade = normalizarTrade(tradeRaw);
     const swapOffer = normalizarSwap(swapRaw);
@@ -118,7 +164,8 @@ async function construirCarta(red: ConfigRed, tokenId: number): Promise<CartaCad
       swapOffer,
       precioTdc,
     };
-  } catch {
+  } catch (error) {
+    console.error(`[blockchain] Error construyendo carta ${tokenId}:`, error);
     return null;
   }
 }

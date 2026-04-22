@@ -16,6 +16,45 @@ Todo el ecosistema se basa en la interacción de dos contratos inteligentes:
 
 Sigue estos pasos para arrancar el entorno de desarrollo local, compilar los contratos y conectarlos con la interfaz.
 
+## Fase 1 (prioridad actual)
+
+Esta fase deja listo lo siguiente:
+
+1. Sepolia operativa para contratos + frontend
+2. Pagina de documentacion dentro de la web (`/documentacion`)
+3. Script one-click para levantar todo en local
+
+### Arranque local simple (Windows)
+
+Desde la raiz del repo:
+
+```bat
+start-local.cmd
+```
+
+Este script lanza Hardhat node, despliega en local, sincroniza direcciones al frontend, arranca proxy Pinata y frontend.
+
+### Comandos nuevos de sincronizacion de entorno
+
+En `backend/`:
+
+```bash
+npm run sync:env:local
+npm run sync:env:sepolia
+```
+
+Comandos combinados deploy + sync:
+
+```bash
+npm run deploy:local:sync
+npm run deploy:sepolia:sync
+```
+
+Con esto se actualizan automaticamente en `frontend/.env`:
+
+- VITE_LOCAL_TRADECK_COIN / VITE_LOCAL_TRADECK_NFT / VITE_LOCAL_DEPLOY_BLOCK
+- VITE_SEPOLIA_TRADECK_COIN / VITE_SEPOLIA_TRADECK_NFT / VITE_SEPOLIA_DEPLOY_BLOCK
+
 ## 1️. Instalación Inicial
 Si es la primera vez que clonas el repositorio o si has borrado la carpeta `node_modules`, instala todas las dependencias necesarias:
 ```bash
@@ -48,6 +87,24 @@ npx hardhat ignition deploy ignition/modules/TraDeck.ts --network localhost
 ```
 
 **Importante para el Frontend**: > Al ejecutar el comando de despliegue, la terminal te devolverá dos direcciones (ej: 0x5Fb...). Cópialas y úsalas en el código de React para conectar la dApp con los contratos TraDeckCoin y TraDeckNFT
+
+Alternativa recomendada para no copiar manualmente:
+
+```bash
+npm run deploy:local:sync
+```
+
+### Sepolia (deploy + sync)
+
+1. Configura `.env` en raiz con `SEPOLIA_RPC_URL` y `PRIVATE_KEY`
+2. Ejecuta:
+
+```bash
+cd backend
+npm run deploy:sepolia:sync
+```
+
+3. Arranca frontend y selecciona red Sepolia en la UI
 
 # Sample Hardhat 3 Beta Project (`mocha` and `ethers`)
 

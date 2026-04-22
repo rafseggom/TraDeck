@@ -37,27 +37,33 @@ export async function subirMetadataAIPFS(metadata: MetadataCarta): Promise<Respu
 }
 
 export async function leerMetadataDesdeTokenUri(tokenUri: string): Promise<MetadataCarta | null> {
-  const url = ipfsAHttp(tokenUri);
+  try {
+    const url = ipfsAHttp(tokenUri);
 
-  const respuesta = await fetch(url);
-  if (!respuesta.ok) {
+    const respuesta = await fetch(url);
+    if (!respuesta.ok) {
+      console.warn(`[ipfs] Error fetching metadata from ${url}: ${respuesta.status}`);
+      return null;
+    }
+
+    const data = await respuesta.json();
+
+    return {
+      name: String(data.name ?? "Sin nombre"),
+      image: String(data.image ?? ""),
+      serialNumber: String(data.serialNumber ?? data.serial ?? "SIN-SERIE"),
+      description: typeof data.description === "string" ? data.description : undefined,
+      attributes: Array.isArray(data.attributes)
+        ? data.attributes
+            .filter((x: any) => x && typeof x.trait_type === "string")
+            .map((x: any) => ({
+              trait_type: String(x.trait_type),
+              value: String(x.value ?? ""),
+            }))
+        : undefined,
+    };
+  } catch (error) {
+    console.error(`[ipfs] Error reading metadata from ${tokenUri}:`, error);
     return null;
   }
-
-  const data = await respuesta.json();
-
-  return {
-    name: String(data.name ?? "Sin nombre"),
-    image: String(data.image ?? ""),
-    serialNumber: String(data.serialNumber ?? data.serial ?? "SIN-SERIE"),
-    description: typeof data.description === "string" ? data.description : undefined,
-    attributes: Array.isArray(data.attributes)
-      ? data.attributes
-          .filter((x: any) => x && typeof x.trait_type === "string")
-          .map((x: any) => ({
-            trait_type: String(x.trait_type),
-            value: String(x.value ?? ""),
-          }))
-      : undefined,
-  };
 }

@@ -12,7 +12,6 @@ interface VariablesEntorno {
   VITE_LOCAL_DEPLOY_BLOCK?: string;
   VITE_SEPOLIA_DEPLOY_BLOCK?: string;
   VITE_PINATA_PROXY_URL?: string;
-  VITE_POKEMON_TCG_API_KEY?: string;
 }
 
 const env = import.meta.env as ImportMetaEnv & VariablesEntorno;
@@ -44,7 +43,7 @@ export const REDES: Record<RedClave, ConfigRed> = {
     clave: "sepolia",
     nombre: "Sepolia",
     chainId: toNumero(env.VITE_SEPOLIA_CHAIN_ID, 11155111),
-    rpcUrl: env.VITE_SEPOLIA_RPC_URL ?? "",
+    rpcUrl: env.VITE_SEPOLIA_RPC_URL ?? "https://ethereum-sepolia-rpc.publicnode.com",
     nftAddress: toAddress(env.VITE_SEPOLIA_TRADECK_NFT),
     coinAddress: toAddress(env.VITE_SEPOLIA_TRADECK_COIN),
     deployBlock: toNumero(env.VITE_SEPOLIA_DEPLOY_BLOCK, 0),
@@ -52,8 +51,6 @@ export const REDES: Record<RedClave, ConfigRed> = {
 };
 
 export const PINATA_PROXY_URL = env.VITE_PINATA_PROXY_URL ?? "http://127.0.0.1:8787";
-
-export const POKEMON_TCG_API_KEY = env.VITE_POKEMON_TCG_API_KEY ?? "";
 
 export function redPorClave(clave: RedClave): ConfigRed {
   return REDES[clave];

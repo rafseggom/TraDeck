@@ -1,8 +1,8 @@
-import { POKEMON_TCG_API_KEY } from "./config";
+import TCGdex, { Query } from "@tcgdex/sdk";
 import type { ResultadoBusquedaCarta } from "./types";
 
 const SCRYFALL_URL = "https://api.scryfall.com/cards/search";
-const POKEMON_URL = "https://api.pokemontcg.io/v2/cards";
+const tcgdex = new TCGdex("en");
 
 function toTextoValor(valor: unknown): string {
   return typeof valor === "string" ? valor : "";
@@ -94,27 +94,58 @@ export async function buscarCartasPokemon(texto: string): Promise<ResultadoBusqu
     return [];
   }
 
-  const headers: Record<string, string> = {};
-  if (POKEMON_TCG_API_KEY.trim().length > 0) {
-    headers["X-Api-Key"] = POKEMON_TCG_API_KEY;
+  try {
+    const cartas = await tcgdex.card.list(
+      Query.create()
+        .contains("name", query)
+        .paginate(1, 24)
+    );
+
+    return cartas
+      .map((carta: any) => ({
+        id: String(carta.id ?? ""),
+        nombre: String(carta.name ?? "Sin nombre"),
+        imagen: String(carta.getImageURL?.("high", "png") ?? ""),
+        juego: "POKEMON" as const,
+      }))
+      .filter((carta: ResultadoBusquedaCarta) => carta.imagen.length > 0);
+  } catch (error) {
+    console.error("Error buscando cartas Pokémon:", error);
+    throw new Error("No se pudo consultar TCGdex");
+  }
+}
+
+export async function buscarVersionesPokemon(nombreCarta: string): Promise<ResultadoBusquedaCarta[]> {
+  const nombre = nombreCarta.trim();
+
+  if (!nombre) {
+    return [];
   }
 
-  const url = `${POKEMON_URL}?q=name:*${encodeURIComponent(query)}*&pageSize=24`;
-  const respuesta = await fetch(url, { headers });
+  try {
+    const cartas = await tcgdex.card.list(
+      Query.create()
+        .equal("name", nombre)
+        .sort("set.releaseDate", "DESC")
+    );
 
-  if (!respuesta.ok) {
-    throw new Error("No se pudo consultar Pokemon TCG API");
+    return cartas
+      .map((carta: any) => {
+        const setName = carta.set?.name || "Set desconocido";
+        const series = carta.set?.serie?.name || "Serie desconocida";
+        const cardNumber = carta.localId || "-";
+
+        return {
+          id: String(carta.id ?? ""),
+          nombre: String(carta.name ?? "Sin nombre"),
+          imagen: String(carta.getImageURL?.("high", "png") ?? ""),
+          juego: "POKEMON" as const,
+          detalle: `${setName} (${series}) #${cardNumber}`,
+        } satisfies ResultadoBusquedaCarta;
+      })
+      .filter((carta: ResultadoBusquedaCarta) => carta.imagen.length > 0);
+  } catch (error) {
+    console.error("Error buscando versiones Pokémon:", error);
+    throw new Error("No se pudo consultar versiones en TCGdex");
   }
-
-  const data = await respuesta.json();
-  const cartas = Array.isArray(data.data) ? data.data : [];
-
-  return cartas
-    .map((carta: any) => ({
-      id: String(carta.id ?? ""),
-      nombre: String(carta.name ?? "Sin nombre"),
-      imagen: String(carta.images?.large ?? carta.images?.small ?? ""),
-      juego: "POKEMON" as const,
-    }))
-    .filter((carta: ResultadoBusquedaCarta) => carta.imagen.length > 0);
 }

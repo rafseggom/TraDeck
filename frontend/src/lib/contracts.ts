@@ -62,24 +62,41 @@ export async function solicitarCambioRed(red: ConfigRed): Promise<void> {
       params: [{ chainId: chainHex }],
     });
   } catch (error: any) {
-    if (error?.code !== 4902 || red.clave !== "local") {
+    if (error?.code !== 4902) {
       throw error;
     }
 
+    if (!red.rpcUrl || red.rpcUrl.trim().length === 0) {
+      throw new Error(`No hay RPC configurado para agregar la red ${red.nombre} en MetaMask`);
+    }
+
+    const parametrosRed =
+      red.clave === "sepolia"
+        ? {
+            chainId: chainHex,
+            chainName: "Sepolia",
+            rpcUrls: [red.rpcUrl],
+            nativeCurrency: {
+              name: "Ether",
+              symbol: "ETH",
+              decimals: 18,
+            },
+            blockExplorerUrls: ["https://sepolia.etherscan.io"],
+          }
+        : {
+            chainId: chainHex,
+            chainName: "Hardhat Local",
+            rpcUrls: [red.rpcUrl],
+            nativeCurrency: {
+              name: "ETH",
+              symbol: "ETH",
+              decimals: 18,
+            },
+          };
+
     await window.ethereum.request({
       method: "wallet_addEthereumChain",
-      params: [
-        {
-          chainId: chainHex,
-          chainName: "Hardhat Local",
-          rpcUrls: [red.rpcUrl],
-          nativeCurrency: {
-            name: "ETH",
-            symbol: "ETH",
-            decimals: 18,
-          },
-        },
-      ],
+      params: [parametrosRed],
     });
   }
 }

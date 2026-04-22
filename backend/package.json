@@ -8,6 +8,10 @@
     "node": "hardhat node",
     "deploy:local": "hardhat ignition deploy ignition/modules/TraDeck.ts --network localhost",
     "deploy:sepolia": "hardhat ignition deploy ignition/modules/TraDeck.ts --network sepolia",
+    "sync:env:local": "node scripts/sync-frontend-env.mjs --network local",
+    "sync:env:sepolia": "node scripts/sync-frontend-env.mjs --network sepolia",
+    "deploy:local:sync": "hardhat ignition deploy ignition/modules/TraDeck.ts --network localhost && npm run sync:env:local",
+    "deploy:sepolia:sync": "hardhat ignition deploy ignition/modules/TraDeck.ts --network sepolia && npm run sync:env:sepolia",
     "pinata:proxy": "node scripts/pinata-proxy.mjs"
   },
   "keywords": [],

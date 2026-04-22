@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useAppContext } from "../lib/app-context";
 import { subirMetadataAIPFS } from "../lib/ipfs";
 import { generarSerialPSA } from "../lib/serial";
-import { buscarCartasMTG, buscarCartasPokemon, buscarVersionesMTG } from "../lib/tcg";
+import { buscarCartasMTG, buscarCartasPokemon, buscarVersionesMTG, buscarVersionesPokemon } from "../lib/tcg";
 import type { JuegoCarta, MetadataCarta, ResultadoBusquedaCarta } from "../lib/types";
 
 type ModoCreacion = "manual" | "mtg" | "pokemon";
@@ -81,7 +81,7 @@ export function CrearCartaPage(): JSX.Element {
   const seleccionarResultado = async (resultado: ResultadoBusquedaCarta): Promise<void> => {
     setSeleccionada(resultado);
 
-    if (modo !== "mtg") {
+    if (modo === "manual") {
       return;
     }
 
@@ -91,7 +91,8 @@ export function CrearCartaPage(): JSX.Element {
     setVersionMTGId("");
 
     try {
-      const versiones = await buscarVersionesMTG(resultado.nombre);
+      const versiones =
+        modo === "mtg" ? await buscarVersionesMTG(resultado.nombre) : await buscarVersionesPokemon(resultado.nombre);
       setVersionesMTG(versiones);
       if (versiones.length > 0) {
         setVersionMTGId(versiones[0].id);
@@ -218,7 +219,7 @@ export function CrearCartaPage(): JSX.Element {
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder={modo === "mtg" ? "Busca en Scryfall" : "Busca en Pokemon TCG API"}
+                placeholder={modo === "mtg" ? "Busca en Scryfall" : "Busca en TCGdex"}
               />
               <button
                 type="button"

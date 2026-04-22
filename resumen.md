@@ -149,6 +149,7 @@ Archivo: frontend/src/App.tsx
 - /crear : mint manual o desde APIs
 - /mercado : compra, escrow y swaps
 - /historial : timeline y veracidad on-chain
+- /documentacion : guia de uso, FAQ, troubleshooting, autores y licencia
 
 ### 5.3 Funcionalidades implementadas
 
@@ -160,7 +161,7 @@ Archivo: frontend/src/App.tsx
 1. Crear carta:
 	- modo manual
 	- busqueda MTG (Scryfall)
-	- busqueda Pokemon
+	- busqueda Pokemon (TCGdex SDK)
 1. MTG con selector de versiones/prints de una carta
 1. Generacion de serial PSA aleatorio
 1. Subida metadata a IPFS via proxy seguro
@@ -184,6 +185,7 @@ Este bloque resume el trabajo hecho en la sesion actual:
 1. Creacion/configuracion de backend/.env para proxy Pinata
 1. Correccion de CORS para localhost y 127.0.0.1
 1. Migracion de Pinata legacy a Pinata v3 Files API
+1. Migracion de Pokemon TCG API (pago) a TCGdex SDK (gratuito)
 1. Mejora de busqueda MTG para manejar prints/versiones
 1. Cambio de copy en UI: Magic: The Gathering y PSA Serial Number
 1. Mejora visual y filtro de juego en Mi coleccion
@@ -194,6 +196,10 @@ Este bloque resume el trabajo hecho en la sesion actual:
 1. Historial ampliado con datos completos de bloque y tx hash
 1. Modo hack local para demostrar deteccion de alteraciones
 1. Nueva seccion Comprobacion manual con popup explicativo y visual
+1. Nueva pagina en frontend con documentacion de uso y FAQ
+1. Soporte de cambio de red MetaMask mejorado para agregar Sepolia si no existe
+1. Script de sincronizacion de direcciones deployadas a frontend/.env (local y sepolia)
+1. Script one-click start-local.cmd para levantar entorno local completo
 
 ---
 
@@ -236,7 +242,8 @@ Variables principales:
 - VITE_LOCAL_DEPLOY_BLOCK
 - VITE_SEPOLIA_DEPLOY_BLOCK
 - VITE_PINATA_PROXY_URL
-- VITE_POKEMON_TCG_API_KEY
+
+Nota: Removida VITE_POKEMON_TCG_API_KEY (pokemontcg.io es de pago, migramos a TCGdex SDK gratuito)
 
 Nota: en local ya se ha trabajado con estas direcciones de ejemplo funcionales:
 
@@ -251,7 +258,21 @@ Requisitos:
 
 - Node.js 20+
 - MetaMask
-- Varias terminales abiertas
+- Windows (cmd/powershell) para usar start-local.cmd
+
+### Arranque rapido (recomendado)
+
+Desde la raiz del repo:
+
+- start-local.cmd
+
+Este comando abre y orquesta automaticamente:
+
+- hardhat node
+- deploy local
+- sync de direcciones a frontend/.env
+- proxy pinata
+- frontend dev
 
 ### Paso a paso
 
@@ -318,19 +339,24 @@ En frontend:
 2. Desplegar contratos
 
 - cd backend
-- npm.cmd run deploy:sepolia
+- npm.cmd run deploy:sepolia:sync
 
-3. Copiar direcciones desplegadas a frontend/.env:
+3. Si quieres sincronizar manualmente despues del deploy:
+
+- cd backend
+- npm.cmd run sync:env:sepolia
+
+4. Verificar frontend/.env:
 
 - VITE_SEPOLIA_TRADECK_NFT
 - VITE_SEPOLIA_TRADECK_COIN
-- VITE_SEPOLIA_DEPLOY_BLOCK (bloque inicial del deploy)
+- VITE_SEPOLIA_DEPLOY_BLOCK
 
-4. En frontend seleccionar red objetivo Sepolia
+5. En frontend seleccionar red objetivo Sepolia
 
-5. Asegurar que MetaMask tambien este en Sepolia
+6. Asegurar que MetaMask tambien este en Sepolia
 
-6. Construir version productiva si aplica:
+7. Construir version productiva si aplica:
 
 - cd frontend
 - npm.cmd run build
@@ -346,6 +372,10 @@ Backend:
 - npm.cmd run node
 - npm.cmd run deploy:local
 - npm.cmd run deploy:sepolia
+- npm.cmd run deploy:local:sync
+- npm.cmd run deploy:sepolia:sync
+- npm.cmd run sync:env:local
+- npm.cmd run sync:env:sepolia
 - npm.cmd run pinata:proxy
 
 Frontend:
@@ -353,6 +383,10 @@ Frontend:
 - npm.cmd run dev
 - npm.cmd run build
 - npm.cmd run preview
+
+Raiz del repositorio (Windows):
+
+- start-local.cmd
 
 ---
 

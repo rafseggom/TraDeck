@@ -40,13 +40,33 @@ npm.cmd install
 npm.cmd run dev
 ```
 
+## Arranque local en un comando
+
+Desde la raiz del repositorio puedes ejecutar:
+
+```bat
+start-local.cmd
+```
+
+El script abre y orquesta automaticamente:
+
+- Hardhat node
+- deploy local de contratos
+- sincronizacion de direcciones a frontend/.env
+- proxy Pinata
+- frontend Vite
+
+## Ruta de documentacion en la app
+
+- `/documentacion` : guia de uso, FAQ, troubleshooting, autores y licencia
+
 ## Funcionalidades MVP implementadas
 
 - Login con MetaMask
 - Deteccion automatica de cartas de la wallet conectada
 - Creacion manual de carta
-- Busqueda de cartas MTG (Scryfall)
-- Busqueda de cartas Pokemon (Pokemon TCG API v2)
+- Busqueda de cartas MTG (Scryfall API)
+- Busqueda de cartas Pokemon (TCGdex SDK)
 - Generacion de numero de serie aleatorio tipo PSA
 - Metadata en IPFS via proxy Pinata
 - Marketplace con buscador y filtros

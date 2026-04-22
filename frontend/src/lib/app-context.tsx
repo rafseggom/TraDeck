@@ -376,10 +376,16 @@ export function AppProvider({ children }: PropsWithChildren): JSX.Element {
     void refrescarDatos();
   }, [redConfig, wallet.address, refrescarDatos]);
 
+  const contratosNoConfigurados =
+    redConfig.nftAddress === "0x0000000000000000000000000000000000000000" ||
+    redConfig.coinAddress === "0x0000000000000000000000000000000000000000";
+
   const advertenciaRed =
     wallet.chainId !== null && wallet.chainId !== redConfig.chainId
       ? `Tu cartera esta en chainId ${wallet.chainId}. Cambia a ${redConfig.nombre} (${redConfig.chainId})`
-      : null;
+      : contratosNoConfigurados
+        ? `Los contratos de ${redConfig.nombre} no estan configurados. Ejecuta 'npm run deploy:${redConfig.clave}:sync' en backend o copia direcciones desplegadas a frontend/.env`
+        : null;
 
   const value = useMemo<AppContextValue>(
     () => ({
