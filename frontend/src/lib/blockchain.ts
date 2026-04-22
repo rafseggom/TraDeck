@@ -265,6 +265,13 @@ export async function comprarCarta(red: ConfigRed, tokenId: number): Promise<str
     throw new Error("La carta no tiene precio valido");
   }
 
+  const saldo = BigInt(await coin.balanceOf(walletAddress));
+  if (saldo < precio) {
+    throw new Error(
+      `Saldo TDC insuficiente para comprar. Necesitas ${formatUnits(precio, 18)} TDC y tienes ${formatUnits(saldo, 18)} TDC. Pulsa \"Pedir airdrop\" e intenta de nuevo.`,
+    );
+  }
+
   const allowance = BigInt(await coin.allowance(walletAddress, red.nftAddress));
   if (allowance < precio) {
     const txApprove = await coin.approve(red.nftAddress, precio);
@@ -274,6 +281,29 @@ export async function comprarCarta(red: ConfigRed, tokenId: number): Promise<str
   const tx = await nft.buyCard(BigInt(tokenId));
   await tx.wait();
   return String(tx.hash);
+}
+
+function decodeErc20InsufficientBalance(data: string): string | null {
+  const hex = data.toLowerCase();
+  const selector = "0xe450d38c"; // ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed)
+  if (!hex.startsWith(selector)) {
+    return null;
+  }
+
+  const payload = hex.slice(selector.length);
+  if (payload.length < 64 * 3) {
+    return null;
+  }
+
+  const senderWord = payload.slice(0, 64);
+  const balanceWord = payload.slice(64, 128);
+  const neededWord = payload.slice(128, 192);
+
+  const sender = `0x${senderWord.slice(24)}`;
+  const balance = BigInt(`0x${balanceWord}`);
+  const needed = BigInt(`0x${neededWord}`);
+
+  return `Saldo TDC insuficiente para completar la compra. Cuenta: ${sender}. Saldo: ${formatUnits(balance, 18)} TDC. Necesario: ${formatUnits(needed, 18)} TDC.`;
 }
 
 export async function confirmarEntrega(red: ConfigRed, tokenId: number): Promise<string> {
@@ -511,6 +541,16 @@ export function formatearErrorBlockchain(error: unknown): string {
 
   if (error && typeof error === "object") {
     const e = error as any;
+
+    const posiblesData: unknown[] = [e.data, e.error?.data, e.info?.error?.data];
+    for (const data of posiblesData) {
+      if (typeof data === "string" && data.startsWith("0x")) {
+        const decoded = decodeErc20InsufficientBalance(data);
+        if (decoded) {
+          return decoded;
+        }
+      }
+    }
 
     if (typeof e.shortMessage === "string" && e.shortMessage.length > 0) {
       return e.shortMessage;
