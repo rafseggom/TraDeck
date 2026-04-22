@@ -376,8 +376,6 @@ export async function obtenerHistorialCarta(red: ConfigRed, tokenId: number): Pr
   const provider = obtenerReadProvider(red);
   const { nft } = crearContratos(provider, red);
 
-  // Alchemy Free tier: máximo 10 bloques por eth_getLogs
-  // Usamos chunking de 5 bloques para ser conservador
   const bloqueActual = await provider.getBlockNumber();
   const bloqueInicio = Math.max(0, red.deployBlock);
   const eventos: any[] = [];
@@ -386,18 +384,44 @@ export async function obtenerHistorialCarta(red: ConfigRed, tokenId: number): Pr
     return [];
   }
 
-  const tamanoTramo = 5;
-  for (let desde = bloqueInicio; desde <= bloqueActual; desde += tamanoTramo) {
-    const hasta = Math.min(desde + tamanoTramo - 1, bloqueActual);
+  if (red.clave === "sepolia") {
     try {
-      const tramo = await nft.queryFilter(nft.filters.Transfer(null, null, BigInt(tokenId)), desde, hasta);
-      eventos.push(...(tramo as any[]));
+      // Alchemy nos limita a 10 bloques. Como Web3 es descentralizado, 
+      // saltamos esa restricción conectándonos a un nodo público comunitario 
+      // solo para leer la historia inmutable de la carta.
+      const { JsonRpcProvider } = await import("ethers");
+      const providerPublico = new JsonRpcProvider("https://ethereum-sepolia-rpc.publicnode.com");
+      const { nft: nftPublico } = crearContratos(providerPublico, red);
+
+      // En nodos públicos podemos buscar en tramos gigantes de 10.000 bloques
+      const tamanoTramo = 10000;
+      for (let desde = bloqueInicio; desde <= bloqueActual; desde += tamanoTramo) {
+        const hasta = Math.min(desde + tamanoTramo - 1, bloqueActual);
+        try {
+          const filtro = nftPublico.filters.Transfer(null, null, BigInt(tokenId));
+          const tramo = await nftPublico.queryFilter(filtro, desde, hasta);
+          eventos.push(...(tramo as any[]));
+        } catch (e) {
+          console.warn(`[blockchain] Fallo leyendo tramo ${desde}-${hasta}:`, e);
+        }
+      }
     } catch (error) {
-      console.warn(`[blockchain] Fallo consultando historial en bloques ${desde}-${hasta}:`, error);
-      // Continuamos con el siguiente tramo
+      console.error(`[blockchain] Fallo consultando historial en Sepolia con nodo público:`, error);
+    }
+  } else {
+    const tamanoTramo = 5;
+    for (let desde = bloqueInicio; desde <= bloqueActual; desde += tamanoTramo) {
+      const hasta = Math.min(desde + tamanoTramo - 1, bloqueActual);
+      try {
+        const tramo = await nft.queryFilter(nft.filters.Transfer(null, null, BigInt(tokenId)), desde, hasta);
+        eventos.push(...(tramo as any[]));
+      } catch (error) {
+        console.warn(`[blockchain] Fallo consultando eventos en bloques ${desde}-${hasta}:`, error);
+      }
     }
   }
 
+  // --- PROCESAMIENTO DE BLOQUES (Funciona igual para ambas) ---
   // Limitar paralelismo a 3 para evitar rate limits
   const bloqueCache = new Map<number, any>();
   const historial: EventoCartaHistorial[] = [];
@@ -407,7 +431,8 @@ export async function obtenerHistorialCarta(red: ConfigRed, tokenId: number): Pr
     const from = String(evento.args?.from ?? ZeroAddress);
     const to = String(evento.args?.to ?? ZeroAddress);
 
-    // Usar caché o consultar bloque
+    // Aquí volvemos a usar tu provider de Alchemy normal, porque leer
+    // el hash de 1 solo bloque concreto sí está permitido y es instantáneo.
     let block = bloqueCache.get(evento.blockNumber);
     if (!block) {
       try {

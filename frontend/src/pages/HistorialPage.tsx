@@ -58,7 +58,8 @@ export function HistorialPage(): JSX.Element {
   );
 
   useEffect(() => {
-    if (!tokenSeleccionado) {
+    // Cambio clave: antes era !tokenSeleccionado, lo cual fallaba si el ID era 0
+    if (tokenSeleccionado === null) {
       setEventosCadena([]);
       setEventosVista([]);
       return;
@@ -106,7 +107,8 @@ export function HistorialPage(): JSX.Element {
   };
 
   const ejecutarVerificacion = async (): Promise<void> => {
-    if (!tokenSeleccionado) {
+    // Cambio clave: validamos explícitamente contra null
+    if (tokenSeleccionado === null) {
       return;
     }
 
@@ -160,7 +162,8 @@ export function HistorialPage(): JSX.Element {
   };
 
   useEffect(() => {
-    if (checkParam !== "1" || !tokenSeleccionado || cargando) {
+    // Cambio clave: permitir que el ID 0 pase la validación
+    if (checkParam !== "1" || tokenSeleccionado === null || cargando) {
       return;
     }
 
@@ -188,7 +191,8 @@ export function HistorialPage(): JSX.Element {
             type="button"
             className="btn-primary"
             onClick={() => void ejecutarVerificacion()}
-            disabled={verificando || cargando || !tokenSeleccionado}
+            // Cambio clave: activar botón aunque el ID sea 0
+            disabled={verificando || cargando || tokenSeleccionado === null}
           >
             {verificando ? "Verificando..." : "Comprobar veracidad"}
           </button>
