@@ -44,3 +44,6 @@ frontend/vite.config.d.ts
 # Ignorar los despliegues del nodo local (chain 31337)
 **/ignition/deployments/chain-31337/
 node_modules
+
+.gemini
+.planning
