@@ -76,6 +76,18 @@ export function Layout(): JSX.Element {
             >
               Recargar
             </button>
+
+            {redClave === "sepolia" && wallet.address && (
+              <a
+                href={`https://sepolia.etherscan.io/address/${wallet.address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-tertiary"
+                style={{ textDecoration: "none", display: "inline-block" }}
+              >
+                Etherscan
+              </a>
+            )}
           </div>
         </div>
       </header>
