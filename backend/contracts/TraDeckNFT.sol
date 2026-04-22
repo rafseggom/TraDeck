@@ -126,5 +126,50 @@ contract TraDeckNFT is ERC721URIStorage {
         delete swapOffers[myTokenId];
     }
 
+    // Función para obtener todos los IDs de un usuario de golpe
+    function getTokensOfOwner(address owner) public view returns (uint256[] memory) {
+        uint256 balance = balanceOf(owner);
+        uint256[] memory tokens = new uint256[](balance);
+        uint256 counter = 0;
+        
+        // Recorremos todos los IDs creados
+        for (uint256 i = 0; i < _nextTokenId; i++) {
+            // _ownerOf es interno y no falla si el token no existe
+            if (_ownerOf(i) == owner) {
+                tokens[counter] = i;
+                counter++;
+            }
+        }
+        return tokens;
+    }
+
+    // --- SUPER HELPER ON-CHAIN ---
+    
+    // Estructura para devolver toda la info de una carta de golpe
+    struct CardData {
+        uint256 tokenId;
+        address owner;
+        string tokenUri;
+        Trade trade;
+        SwapOffer swapOffer;
+    }
+
+    // Devuelve TODAS las cartas del juego en 1 sola petición RPC
+    function getAllCards() public view returns (CardData[] memory) {
+        uint256 total = _nextTokenId;
+        CardData[] memory allCards = new CardData[](total);
+        
+        for (uint256 i = 0; i < total; i++) {
+            allCards[i] = CardData({
+                tokenId: i,
+                owner: _ownerOf(i),
+                tokenUri: tokenURI(i),
+                trade: trades[i],
+                swapOffer: swapOffers[i]
+            });
+        }
+        return allCards;
+    }
+
 
 }

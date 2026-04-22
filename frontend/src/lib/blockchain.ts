@@ -171,33 +171,71 @@ async function construirCarta(red: ConfigRed, tokenId: number): Promise<CartaCad
 }
 
 export async function leerEstadoCadena(red: ConfigRed, walletAddress?: string): Promise<EstadoLecturaCadena> {
-  const ids = await tokenIdsDetectados(red);
+  const provider = obtenerReadProvider(red);
+  const { nft } = crearContratos(provider, red);
 
-  // Limitar paralelismo a máximo 3 para evitar rate limits en Alchemy Free
-  const maxParalelo = 3;
-  const cartas: (CartaCadena | null)[] = [];
+  try {
+    // 1. SOLA LLAMADA A ALCHEMY: Trae toda la info de todas las cartas
+    const rawCards = await nft.getAllCards();
 
-  for (let i = 0; i < ids.length; i += maxParalelo) {
-    const grupo = ids.slice(i, i + maxParalelo);
-    const cartasGrupo = await Promise.all(grupo.map(async (id) => construirCarta(red, id)));
-    cartas.push(...cartasGrupo);
+    // 2. Procesamos y sacamos los metadatos de IPFS
+    const cartasPromises = rawCards.map(async (rawCard: any) => {
+      const tokenId = Number(rawCard.tokenId);
+      const owner = String(rawCard.owner);
+      const tokenUri = String(rawCard.tokenUri);
+      
+      // Si el owner es ZeroAddress, el token no existe (por seguridad)
+      if (esAddressIgual(owner, ZeroAddress)) return null;
+
+      const trade = normalizarTrade(rawCard.trade);
+      const swapOffer = normalizarSwap(rawCard.swapOffer);
+
+      const metadata = await leerMetadataDesdeTokenUri(tokenUri);
+      const nombre = metadata?.name ?? `Carta #${tokenId}`;
+      const imagen = metadata?.image ?? "";
+      const numeroSerie = metadata?.serialNumber ?? "SIN-SERIE";
+      const juego = inferirJuego(metadata);
+
+      const precioTdc =
+        trade.state === EstadoTrade.Listada || trade.state === EstadoTrade.EnEscrow
+          ? formatUnits(trade.price, 18)
+          : null;
+
+      return {
+        tokenId,
+        owner,
+        tokenUri,
+        nombre,
+        imagen,
+        numeroSerie,
+        juego,
+        metadata,
+        trade,
+        swapOffer,
+        precioTdc,
+      } as CartaCadena;
+    });
+
+    const cartasValidas = (await Promise.all(cartasPromises)).filter((c): c is CartaCadena => c !== null);
+
+    // 3. Filtramos para el estado de React
+    const cartasMercado = cartasValidas.filter(
+      (carta) => carta.trade.state === EstadoTrade.Listada || carta.trade.state === EstadoTrade.EnEscrow,
+    );
+
+    const cartasUsuario = walletAddress
+      ? cartasValidas.filter((carta) => esAddressIgual(carta.owner, walletAddress))
+      : [];
+
+    return {
+      cartas: cartasValidas.sort((a, b) => b.tokenId - a.tokenId), // Las más nuevas primero
+      cartasMercado,
+      cartasUsuario,
+    };
+  } catch (error) {
+    console.error("[blockchain] Error en leerEstadoCadena (¿Has redesplegado el contrato?):", error);
+    return { cartas: [], cartasMercado: [], cartasUsuario: [] };
   }
-
-  const cartasValidas = cartas.filter((carta): carta is CartaCadena => carta !== null);
-
-  const cartasMercado = cartasValidas.filter(
-    (carta) => carta.trade.state === EstadoTrade.Listada || carta.trade.state === EstadoTrade.EnEscrow,
-  );
-
-  const cartasUsuario = walletAddress
-    ? cartasValidas.filter((carta) => esAddressIgual(carta.owner, walletAddress))
-    : [];
-
-  return {
-    cartas: cartasValidas,
-    cartasMercado,
-    cartasUsuario,
-  };
 }
 
 export async function leerSaldoTDC(red: ConfigRed, walletAddress: string): Promise<string> {

@@ -44,8 +44,14 @@ export function crearContratos(runner: ContractRunner, red: ConfigRed): {
   nft: Contract;
   coin: Contract;
 } {
-  const nft = new Contract(red.nftAddress, nftAbi, runner);
-  const coin = new Contract(red.coinAddress, coinAbi, runner);
+  // Extraemos el ABI dinámicamente. 
+  // Si copiaste el archivo entero de Hardhat, usará la propiedad .abi
+  // Si copiaste solo el array, lo usará directamente.
+  const abiDelNft = (nftAbi as any).abi ? (nftAbi as any).abi : nftAbi;
+  const abiDelCoin = (coinAbi as any).abi ? (coinAbi as any).abi : coinAbi;
+
+  const nft = new Contract(red.nftAddress, abiDelNft, runner);
+  const coin = new Contract(red.coinAddress, abiDelCoin, runner);
   return { nft, coin };
 }
 
