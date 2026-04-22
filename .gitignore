@@ -1,0 +1,46 @@
+# Node modules
+**/node_modules
+**/node_modules/**
+
+
+# Compilation output
+/dist
+**/dist/
+
+# pnpm deploy output
+/bundle
+
+# Hardhat Build Artifacts
+/artifacts
+
+# Hardhat compilation (v2) support directory
+/cache
+
+# Typechain output
+/types
+ 
+# Hardhat coverage reports
+/coverage
+
+.env
+
+# Despliegues de la red local (Hardhat Network)
+/ignition/deployments/chain-31337
+
+# Archivos ocultos de macOS
+.DS_Store
+**/.DS_Store
+
+# Archivos autogenerados de Hardhat (Ignorar en cualquier carpeta)
+**/artifacts/
+**/cache/
+**/types/
+**/typechain-types/
+**/coverage/
+**/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
+# Ignorar los despliegues del nodo local (chain 31337)
+**/ignition/deployments/chain-31337/
+node_modules
