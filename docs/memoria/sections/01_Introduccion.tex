@@ -4,9 +4,9 @@ Este primer capítulo expone el contexto actual del mercado de cartas colecciona
 detrás del proyecto y los objetivos principales que se persiguen con el desarrollo de TraDeck.
 
 \section{Contexto y Motivación}
-El mercardo de los Juegos de Cartas Coleccionables (TGC, por sus siglas en inglés) ha experimentado un 
+El mercado de los Juegos de Cartas Coleccionables (TCG, por sus siglas en inglés) ha experimentado un 
 crecimiento exponencial en los últimos años, con millones de jugadores y coleccionistas en todo el mundo, 
-transformándose de un nicho de entretinimiento a un mercado de activos digitales con un valor significativo.
+transformándose de un nicho de entretenimiento a un mercado de activos digitales con un valor significativo.
 
 Sin embargo, este auge ha traído consigo desafíos tanto para los jugadores como para los coleccionistas, entre 
 ellos:
@@ -20,7 +20,7 @@ ellos:
     puedan gestionar y autenticar sus colecciones de manera eficiente y segura.
 \end{itemize}
 
-Ante esta situacion, surge la necesidad de una solución tecnológica que permita a los usuarios autenticar sus cartas 
+Ante esta situación, surge la necesidad de una solución tecnológica que permita a los usuarios autenticar sus cartas 
 de manera rápida, confiable y accesible, sin depender de terceros costosos o procesos complicados. 
 
 \section{Estado del Arte y Tecnologías Investigadas}
@@ -37,7 +37,32 @@ La investigación nos ha llevado a plantear una arquitectura híbrida que se apo
     la titularidad de las cartas. Se investigaron los estándares ERC-721 (Tokens No Fungibles) y ERC-20 (para la economía 
     interna) para representar cada carta como un activo digital único, garantizando su autenticidad y trazabilidad.
     \item \textbf{Capa de Almacenamiento (IPFS):} Nos dimos cuenta de que almacenar imágenes y metadatos de las cartas 
-    directamente en la blockchain sería costoso e inefeciente. Por ello, se investigó el uso de IPFS (InterPlanetary File
+    directamente en la blockchain sería costoso e ineficiente. Por ello, se investigó el uso de IPFS (InterPlanetary File
     System) para almacenar de manera descentralizada los datos asociados a cada carta, asegurando su disponibilidad y 
     resistencia a la censura.
+\end{itemize}
+
+%Respuesta a por qué no se ha utilizado el ERC-1155: "Lo evaluamos durante la fase de investigación, pero lo descartamos 
+%por la naturaleza de nuestro modelo de negocio. TraDeck certifica cartas coleccionables donde el estado físico y el número 
+%de serie son cruciales. El ERC-1155 está optimizado para 'ediciones' o lotes de objetos idénticos, mientras que nosotros 
+%necesitábamos la trazabilidad 1 a 1 estricta que proporciona el ERC-721. Además, separar la lógica en dos contratos 
+%(ERC-20 y 721) nos permitió aplicar el principio de responsabilidad única, haciendo que el patrón Escrow fuera mucho más 
+%seguro y fácil de auditar."
+
+\section{Objetivos del Proyecto}
+
+Para dar respuesta a la problemática planteada y validar la viabilidad de la solución propuesta, se han definido los siguientes
+objetivos:
+
+\begin{itemize}
+    \item \textbf{Desarrollar un mercado P2P descentralizado:} Crear una plataforma que permita a los usuarios comprar, 
+    vender e intercambiar cartas coleccionables de manera segura y transparente, sin intermediarios.
+    \item \textbf{Diseñar un protocolo de custodia:} Desarrollar contratos inteligentes que garanticen la seguridad y la atomicidad de las 
+    transacciones, protegiendo tanto a compradores como a vendedores de posibles fraudes o incumplimientos.
+    \item \textbf{Implementar un modelo de almacenamiento eficiente:} Integrar IPFS para almacenar los metadatos e imágenes de las cartas,
+    reduciendo los costes transaccionales y asegurando la disponibilidad de la información.
+    \item \textbf{Proporcionar una interfaz de usuario accesible:} Construir una aplicación web reactiva y fácil de usar que 
+    abstraiga la complejidad de la blockchain, permitiendo a los usuarios interactuar con el mercado de forma intuitiva mediante
+    el uso de monederos digitales como MetaMask. 
+
 \end{itemize}
