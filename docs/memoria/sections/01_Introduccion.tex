@@ -1,2 +1,43 @@
 \chapter{Introducción}\label{cap:introduccion}
 
+Este primer capítulo expone el contexto actual del mercado de cartas coleccionables, la motivación 
+detrás del proyecto y los objetivos principales que se persiguen con el desarrollo de TraDeck.
+
+\section{Contexto y Motivación}
+El mercardo de los Juegos de Cartas Coleccionables (TGC, por sus siglas en inglés) ha experimentado un 
+crecimiento exponencial en los últimos años, con millones de jugadores y coleccionistas en todo el mundo, 
+transformándose de un nicho de entretinimiento a un mercado de activos digitales con un valor significativo.
+
+Sin embargo, este auge ha traído consigo desafíos tanto para los jugadores como para los coleccionistas, entre 
+ellos:
+
+\begin{itemize}
+    \item \textbf{Falsificaciones:} La dificultad para autenticar cartas físicas sin depender de agencias 
+    externas como Beckett o PSA, las cuales pueden ser costosas y no siempre accesibles para todos los usuarios.
+    \item \textbf{Falta de Confianza en la Transacción:} El riesgo de fraude en la compra y venta de cartas,
+    especialmente en plataformas de segunda mano, donde la verificación de la autenticidad es limitada.
+    \item \textbf{Dificultad para Coleccionistas:} La falta de herramientas accesibles para que los coleccionistas 
+    puedan gestionar y autenticar sus colecciones de manera eficiente y segura.
+\end{itemize}
+
+Ante esta situacion, surge la necesidad de una solución tecnológica que permita a los usuarios autenticar sus cartas 
+de manera rápida, confiable y accesible, sin depender de terceros costosos o procesos complicados. 
+
+\section{Estado del Arte y Tecnologías Investigadas}
+
+Para abordar estos desafíos, se ha investigado el paradigma de la Web3 y las tecnologías de registro descentralizado,
+como blockchain, que ofrecen una solución prometedora para la autenticación y gestión de activos digitales. Tradicionalmente,
+una base de datos centralizada podría gestionar un mercado de cartas, pero esto introduce riesgos de seguridad y confianza. 
+En contraste, una solución basada en blockchain permite a los usuarios tener control total sobre sus activos digitales, 
+garantizando la autenticidad y la transparencia en las transacciones.
+
+La investigación nos ha llevado a plantear una arquitectura híbrida que se apoya en dos pilares fundamentales:
+\begin{itemize}
+    \item \textbf{Capa de Titularidad (Blockchain):} Uso de la red Ethereum mediante contratos inteligentes para registrar 
+    la titularidad de las cartas. Se investigaron los estándares ERC-721 (Tokens No Fungibles) y ERC-20 (para la economía 
+    interna) para representar cada carta como un activo digital único, garantizando su autenticidad y trazabilidad.
+    \item \textbf{Capa de Almacenamiento (IPFS):} Nos dimos cuenta de que almacenar imágenes y metadatos de las cartas 
+    directamente en la blockchain sería costoso e inefeciente. Por ello, se investigó el uso de IPFS (InterPlanetary File
+    System) para almacenar de manera descentralizada los datos asociados a cada carta, asegurando su disponibilidad y 
+    resistencia a la censura.
+\end{itemize}
