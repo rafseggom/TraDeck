@@ -24,22 +24,37 @@ token de utilidad basado en el estándar ERC-20.
 \end{itemize}
 
 
-\subsection{TraDeckNFT - Mercado y Custodia (Escrow)}
-El contrato principal hereda el estándar ERC-721 y gestiona tanto la emisión (\textit{Minting}) de los activos como su intercambio seguro. Para garantizar la confianza en un entorno P2P sin intermediarios humanos, se ha implementado un patrón de diseño de custodia o \textit{Escrow}. \\
+\subsection{Capa de Activos: TraDeckNFT}
+El contrato principal hereda el estándar ERC-721 para gestionar la emisión (\textit{Minting}) de las cartas. 
+Su diseño incluye un motor de mercado integrado.
 
-La máquina de estados del mercado sigue el siguiente flujo transaccional:
+\subsubsection{Protocolo de Custodia - Escrow}
+Para garantizar transacciones seguras P2P sin intermediarios, se ha diseñado una máquina de estados para el 
+flujo de venta:
+
 \begin{enumerate}
-    \item \textbf{Listado y Bloqueo:} Al invocar \texttt{listForSale}, el vendedor transfiere temporalmente la propiedad de su NFT al propio contrato inteligente (\texttt{address(this)}). Esto garantiza al comprador que el activo existe y está disponible.
-    \item \textbf{Compromiso de Compra:} El comprador ejecuta \texttt{buyCard}, depositando los fondos necesarios. El contrato retiene tanto el NFT como el dinero, alcanzando el estado de \textit{InEscrow}.
-    \item \textbf{Liquidación Atómica:} Mediante la función \texttt{confirmDelivery}, se cierra la operación. El contrato ejecuta una transacción atómica donde transfiere los fondos al vendedor y el activo al comprador de forma simultánea. Si cualquiera de las dos transferencias falla, la operación completa se revierte.
+    \item \textbf{Listado:} Al invocar \texttt{listForSale}, el vendedor transfiere temporalmente la propiedad de 
+        su NFT al propio contrato inteligente (\texttt{address(this)}). Esto garantiza al comprador que el activo 
+        existe y está disponible. 
+    \item \textbf{Compromiso de Compra:} El comprador ejecuta \texttt{buyCard}, depositando los fondos necesarios en el contrato. 
+        El contrato retiene tanto el NFT como el dinero, alcanzando el estado de \textit{InEscrow}.
+    \item \textbf{Liquidación Atómica:} Mediante la función \texttt{confirmDelivery}, se cierra la operación. El 
+        contrato ejecuta una transacción atómica donde transfiere los fondos al vendedor y el activo al comprador 
+        de forma simultánea. Si cualquiera de las dos transferencias falla, la operación completa se revierte.
 \end{enumerate}
 
 \subsection{Seguridad y Mitigación de Riesgos}
-Dada la inmutabilidad del código (\textit{bytecode}) una vez desplegado en la blockchain, el contrato \texttt{TraDeckNFT} implementa reglas estrictas de ciberseguridad:
+El diseño incorpora reglas estrictas de seguridad a nivel de protocolo:
 \begin{itemize}
-    \item \textbf{Validación de Identidad:} El sistema prescinde de contraseñas tradicionales, utilizando firmas criptográficas (\texttt{msg.sender}) para autorizar cada escritura en la base de datos distribuida.
-    \item \textbf{Patrón Checks-Effects-Interactions:} Para prevenir ataques de reentrada (\textit{Reentrancy Attacks}), las funciones que manejan transferencias de valor actualizan o borran el estado interno (ej. \texttt{delete trades[tokenId]}) antes de interactuar con contratos externos o enviar fondos.
+    \item \textbf{Validación de Identidad:} El sistema prescinde de contraseñas tradicionales, utilizando firmas 
+    criptográficas (\texttt{msg.sender}) para autorizar cada escritura en la base de datos distribuida.
+    \item \textbf{Prevención de reentrada:} Implementación del patrón \textit{Checks-Effects-Interactions}. Para 
+    prevenir ataques de reentrada (\textit{Reentrancy Attacks}), las funciones que manejan transferencias de valor 
+    actualizan o borran el estado interno (ej. \texttt{delete trades[tokenId]}) antes de interactuar con contratos 
+    externos o enviar fondos.
 \end{itemize}
+
+
 
 \section{Aseguramiento de Calidad y Entorno de Ejecución}
 La inmutabilidad intrínseca de los contratos inteligentes en Ethereum hace que sea imposible aplicar parches de seguridad convencionales una vez el código ha sido desplegado. Por ello, el ecosistema TraDeck se ha desarrollado bajo una estricta metodología de pruebas (\textit{Testing}).
