@@ -1,15 +1,28 @@
 \chapter{Diseño de la solución}\label{cap:diseño}
 
 \section{Introducción}
-En este capítulo explicaremos...
+En este capítulo explicaremos la arquitectura lógica y el diseño de los componentes 
+que integran el ecosistema TraDeck, centrándonos en la interacción entre la capa de 
+persistencia descentralizada (blockchain) y la lógica de negocio implementada en los 
+contratos inteligentes.
+
 
 \section{Arquitectura del Backend: Smart Contracts}
-El núcleo de TraDeck se fundamenta en una arquitectura de contratos inteligentes componibles, desarrollados en Solidity y desplegados sobre la red Ethereum (simulada en entorno local mediante Hardhat). El ecosistema ha evolucionado hacia una economía basada en un token de utilidad propio, separando la lógica financiera de la lógica de propiedad.
+El núcleo de TraDeck se fundamenta en una arquitectura de contratos inteligentes componibles, 
+desarrollados en Solidity y desplegados sobre la red Ethereum (simulada en entorno local mediante Hardhat). 
+El sistema separa la lógica financiera de la lógica de propiedad para garantizar una mayor modularidad.
 
-\subsection{TraDeckCoin (TDKC) - Capa Financiera}
-Para mitigar la volatilidad inherente a las criptomonedas nativas (como el Ether), se ha implementado un contrato que hereda el estándar ERC-20. Este contrato actúa como la entidad emisora del token de utilidad TDKC, que funciona como la divisa exclusiva del mercado. \\
+\subsection{Capa Financiera: TraDeckCoin (TDKC)}
+Para mitigar la volatilidad inherente a las criptomonedas nativas (como el Ether), se ha diseñado un 
+token de utilidad basado en el estándar ERC-20.
 
-Se ha integrado una función pública de distribución inicial (\textit{Airdrop}), que actúa como un mecanismo de adopción de usuarios, inyectando liquidez inicial (1.000 TDKC) a las nuevas carteras que interactúan con la plataforma.
+\begin{itemize}
+    \item \textbf{Propósito:} Actuar como medio de intercambio dentro del ecosistema TraDeck, permitiendo a 
+        los usuarios comprar y vender cartas sin necesidad de manejar directamente Ether.
+    \item \textbf{Medio de obtención:} Se integra una función \textit{Airdrop} que permite a los usuarios 
+        obtener una cantidad inicial de TDKC de forma gratuita, facilitando la adopción y el testing.
+\end{itemize}
+
 
 \subsection{TraDeckNFT - Mercado y Custodia (Escrow)}
 El contrato principal hereda el estándar ERC-721 y gestiona tanto la emisión (\textit{Minting}) de los activos como su intercambio seguro. Para garantizar la confianza en un entorno P2P sin intermediarios humanos, se ha implementado un patrón de diseño de custodia o \textit{Escrow}. \\
