@@ -135,3 +135,29 @@
   morestring=[b]",
   morestring=[b]'
 }
+
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{gray!10},
+    string=[s]{"}{"},
+    comment=[l]{:\ "},
+    morecomment=[l]{:"},
+    literate=
+     *{0}{{{\color{nblue}0}}}{1}
+      {1}{{{\color{nblue}1}}}{1}
+      {2}{{{\color{nblue}2}}}{1}
+      {3}{{{\color{nblue}3}}}{1}
+      {4}{{{\color{nblue}4}}}{1}
+      {5}{{{\color{nblue}5}}}{1}
+      {6}{{{\color{nblue}6}}}{1}
+      {7}{{{\color{nblue}7}}}{1}
+      {8}{{{\color{nblue}8}}}{1}
+      {9}{{{\color{nblue}9}}}{1},
+}

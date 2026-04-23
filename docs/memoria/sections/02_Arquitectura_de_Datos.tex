@@ -1,0 +1,80 @@
+\chapter{Arquitectura de Datos}\label{cap:arquitectura}
+\section{Introducción}
+Breve introducción al capítulo
+
+\section{El Ledger de Ethereum como Sistema de Persistencia}
+
+\section{Modelado de Activos: Estándares ERC-20 y ERC-721}
+La arquitectura de TraDeck se apoya en dos estándares fundamentales de Ethereum para separar la lógica
+financiera de la lógica de propiedad.
+
+\subsection{Capa Financiera: ERC-20 (TraDeckCoin)}
+Para gestionar la economía interna de la plataforma, se implementa un token ERC-20 \textbf{\cite{openzeppelin_erc20}} llamado TraDeckCoin (TDC) que
+funciona como la moneda de intercambio dentro del mercado. Este token es fungible, lo que significa que cada unidad 
+de TDC es idéntica a otra, permitiendo transacciones fluidas y eficientes.
+
+\begin{itemize}
+    \item \textbf{Estabilidad:} Permite fijar precios sin la volatilidad inherente a las criptomonedas tradicionales.
+    \item \textbf{Utilidad:} Facilita la compra, venta e intercambio de cartas dentro de la plataforma sin depender 
+    de monedas externas. 
+\end{itemize}
+
+\subsection{Capa de Propiedad: ERC-721 (TraDeckNFT)}
+El estándar \textbf{ERC-721} \cite{openzeppelin_erc721} permite representar cada carta como un objeto 
+único e indivisible. En nuestra arquitectura, el NFT actúa como la clave primaria y el certificado de 
+propiedad irrefutable de cada carta coleccionable.
+
+\subsubsection{Estructura de Datos y Mappings}
+A diferencia de los sistemas de gestión de bases de datos tradicionales que usan tablas relacionales 
+y claves foráneas, el ERC-721 asocia la propiedad mediante diccionarios de datos nativos de la 
+blockchain (\verb|mapping|).
+
+A través de funciones estándar como \verb|ownerOf(tokenId)|, el contrato inteligente actúa como nuestro motor 
+de base de datos, permitiéndonos consultar qué dirección criptográfica (usuario) posee un ID de carta 
+específico de forma instantánea y segura.
+
+\subsubsection{Estrategia de Almacenamiento y Costes}
+Almacenar grandes cantidades de datos en la blockchain, como imágenes de alta calidad, tiene un coste de 
+transacción alto y prohibitivo. La propia documentación de OpenZeppelin advierte sobre esto y sugiere el uso 
+de sistemas como IPFS.
+
+Por ello, aplicamos una división de datos:
+\begin{itemize}
+    \item \textbf{Datos On-Chain}. \\ Solo se persisten en la blockchain los datos considerados críticos 
+    que garantizan la titularidad:
+    \begin{itemize}
+        \item \textbf{tokenId:} ID de la carta. % Corregido: decía tokenIf
+        \item \textbf{owner:} Dirección del propietario.
+        \item \textbf{tokenURI:} Un puntero o enlace al alojamiento externo.
+    \end{itemize}
+
+    \item \textbf{Datos Off-Chain}. \\ El \texttt{tokenURI} se diseña para que resuelva a un documento JSON alojado en la 
+    red descentralizada IPFS. Este archivo contiene los datos pesados de la carta: % Corregido: comillas Markdown eliminadas
+
+    \begin{lstlisting}[language=json, caption=Ejemplo de tokenURI apuntando a IPFS]
+{
+    "name": "Charizard",
+    "description": "Carta holografica primera edicion",
+    "image": "ipfs://<CID-de-la-imagen>"
+}
+    \end{lstlisting}
+
+\end{itemize}
+
+\subsection{¿Por qué no utilizar el ERC-1155?}
+Durante la fase de investigación, se evaluó el uso del estándar ERC-1155, que permite la gestión de mútliples tipos de 
+tokens (fungibles y no fungibles) dentro de un mismo contrato. Sin embargo, se descartó por los siguientes motivos:
+
+\begin{itemize}
+    \item \textbf{Unicidad Estricta:} TraDeck certifica cartas coleccionables donde cada ejemplar es único, con un 
+    estado físico y número de serie específicos. El ERC-721 garantiza una trazabilidad 1 a 1 estricta, mientras que 
+    el ERC-1155 está optimizado para 'ediciones' o lotes de objetos idénticos, lo que no se ajustaba a nuestro modelo de negocio. 
+
+    \item \textbf{Responsabilidad Única:} Separar la lógica en dos contratos, ERC-20 y ERC-721, sigue los principios 
+    de diseño modular, facilitando la seguridad y la auditabilidad. El patrón Escrow, que es crucial para garantizar
+    transacciones seguras, se implementa de manera más clara y efectiva con esta separación, evitando la complejidad 
+    adicional que introduciría el ERC-1155.
+\end{itemize}
+
+\section{Estrategia de Almacenamiento Off-chain mediante IPFS}
+
