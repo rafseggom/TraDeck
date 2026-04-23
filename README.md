@@ -1,9 +1,54 @@
-# TraDeck - Backend (Smart Contracts)
+# TraDeck - Trading Card Game & Marketplace
 
-Bienvenido a la sección del Backend de TraDeck. Este directorio contiene todos los Smart Contracts, scripts de despliegue y tests que conforman el núcleo financiero y descentralizado de la aplicación.
+Bienvenido a TraDeck. Este proyecto es una aplicación descentralizada (dApp) enfocada en el coleccionismo, compraventa e intercambio de cartas NFT, utilizando su propia moneda (TDKC). 
+
+## Despliegue en Vivo (Jugar Ahora)
+
+TraDeck ya se encuentra desplegado y listo para usar de forma pública en la red de pruebas de Sepolia. Puedes acceder a la plataforma directamente desde aquí:
+
+**[Probar TraDeck (Despliegue en Vercel)](https://tradeck.vercel.app/)**
+
+**Requisitos para probarlo:** Para interactuar con esta aplicación necesitarás tener instalada la extensión **MetaMask** en tu navegador. Deberás configurar MetaMask en la red de pruebas **Sepolia** y disponer de algo de *Sepolia ETH* para pagar el gas de las transacciones. Puedes conseguir fondos gratuitos buscando en Google cualquier "Sepolia Faucet" (como Alchemy Faucet o Google Web3 Faucet) e introduciendo tu dirección pública. Recomendamos [Sepolia Faucet](https://sepolia-faucet.pk910.de/), es "infinita" y puedes conseguir ETH para varias cuentas.
+
+---
+
+## Requisitos Previos (Instalación Local)
+
+Si quieres ejecutar este programa en tu propio ordenador desde cero, asegúrate de tener preparado lo siguiente:
+
+1. **Node.js:** Necesario para ejecutar el entorno.
+2. **MetaMask:** Extensión de navegador para firmar transacciones.
+3. **Configurar Cartera local:**
+   Cuando ejecutes el entorno local, la herramienta Hardhat creará una blockchain de pruebas en tu máquina y te dará varias "Private Keys" (Claves privadas) cargadas con 10.000 ETH ficticios cada una. 
+   Para usarlas en la aplicación web, debes abrir MetaMask, añadir la red manual `Localhost 8545` (Chain ID: 31337, RPC URL: http://127.0.0.1:8545) e **Importar Cuenta** pegando una de esas claves privadas. Es recomendable importar al menos dos cuentas distintas para poder simular compras e intercambios entre usuarios.
+4. **Configurar Cartera Sepolia:** Puedes, alternativamente, activar las redes de prueba en MetaMask, copiar la dirección pública de tu Wallet de ETH o Sepolia y conseguir ETH desde un faucet. Con ello ya podrás probar la aplicación en la red de prueba Sepolia.
+
+---
+
+## Guía de Arranque Rápido Local (Windows)
+
+Hemos preparado un script automático que hace todo el trabajo por ti. Desde la raíz del repositorio, simplemente haz doble clic o ejecuta en la consola:
+
+```code
+start-local.cmd
+```
+
+**¿Qué hace este script exactamente?**
+- Instala todas las dependencias (`node_modules`) tanto del backend como del frontend.
+- Crea automáticamente los archivos de configuración `.env` necesarios.
+- Levanta el nodo blockchain de Hardhat en una ventana.
+- Despliega los contratos inteligentes en tu red local.
+- Sincroniza las direcciones generadas para que el Frontend las reconozca automáticamente.
+- Arranca el proxy de Pinata en una segunda ventana.
+- Lanza el servidor de desarrollo del Frontend en una tercera ventana.
+
+Al terminar, solo tienes que abrir la dirección local que te marque el Frontend en tu navegador con MetaMask conectado a Localhost.
+
+---
 
 ## Smart Contracts Principales
-Todo el ecosistema se basa en la interacción de dos contratos inteligentes:
+
+Todo el ecosistema se basa en la interacción de dos contratos inteligentes ubicados en el backend:
 
 1. **TraDeckCoin (TDKC):** El token ERC20 nativo. Actúa como el dinero del juego.
    - Incluye una función pública `airdrop()` que actúa como "banco central", regalando 1.000 TDKC a cualquier usuario nuevo para que pueda empezar a jugar y testear.
@@ -12,154 +57,79 @@ Todo el ecosistema se basa en la interacción de dos contratos inteligentes:
    - **Escrow Seguro (Compraventa):** Sistema que retiene los tokens del comprador (`buyCard`) en el contrato inteligente hasta que confirma que ha recibido la carta (`confirmDelivery`), momento en el que el vendedor recibe los fondos.
    - **Intercambio Atómico (Trueque):** Permite a los usuarios intercambiar cartas de forma directa y simultánea (`proposeSwap`, `acceptSwap`), eliminando la posibilidad de estafas.
 
-## Guía de uso rápido (backend)
+---
 
-Sigue estos pasos para arrancar el entorno de desarrollo local, compilar los contratos y conectarlos con la interfaz.
+## Comandos de Sincronización de Entorno (Fase 1)
 
-## Fase 1 (prioridad actual)
+El proyecto incluye scripts diseñados para automatizar la comunicación entre los contratos desplegados y la interfaz web.
 
-Esta fase deja listo lo siguiente:
+En la carpeta `backend/`, puedes sincronizar manualmente las direcciones de los contratos con el frontend usando:
 
-1. Sepolia operativa para contratos + frontend
-2. Pagina de documentacion dentro de la web (`/documentacion`)
-3. Script one-click para levantar todo en local
-
-### Arranque local simple (Windows)
-
-Desde la raiz del repo:
-
-```bat
-start-local.cmd
-```
-
-Este script lanza Hardhat node, despliega en local, sincroniza direcciones al frontend, arranca proxy Pinata y frontend.
-
-### Comandos nuevos de sincronizacion de entorno
-
-En `backend/`:
-
-```bash
+```code
 npm run sync:env:local
 npm run sync:env:sepolia
 ```
+Comandos combinados de despliegue + sincronización:
 
-Comandos combinados deploy + sync:
-
-```bash
+```code
 npm run deploy:local:sync
 npm run deploy:sepolia:sync
 ```
 
-Con esto se actualizan automaticamente en `frontend/.env`:
+Con esto se actualizan automáticamente en el archivo `frontend/.env` las siguientes variables según el entorno:
+- `VITE_LOCAL_TRADECK_COIN` / `VITE_LOCAL_TRADECK_NFT` / `VITE_LOCAL_DEPLOY_BLOCK`
+- `VITE_SEPOLIA_TRADECK_COIN` / `VITE_SEPOLIA_TRADECK_NFT` / `VITE_SEPOLIA_DEPLOY_BLOCK`
 
-- VITE_LOCAL_TRADECK_COIN / VITE_LOCAL_TRADECK_NFT / VITE_LOCAL_DEPLOY_BLOCK
-- VITE_SEPOLIA_TRADECK_COIN / VITE_SEPOLIA_TRADECK_NFT / VITE_SEPOLIA_DEPLOY_BLOCK
+---
 
-## 1️. Instalación Inicial
-Si es la primera vez que clonas el repositorio o si has borrado la carpeta `node_modules`, instala todas las dependencias necesarias:
-```bash
+## Guía Manual del Backend
+
+Si prefieres ejecutar los pasos a mano, eres desarrollador y necesitas compilar cambios, o no usas Windows, aquí tienes los comandos paso a paso.
+
+### 1. Instalación Inicial
+Asegúrate de instalar las dependencias si es la primera vez o has borrado `node_modules`:
+
+```code
 cd backend
 npm install
 ```
 
-## 2. Compilación de Contratos
-Cada vez que modifiques el código de un archivo `.sol` dentro de `contracts/`, debes recompilar el proyecto. Esto genera nuevos archivos ABI y los envía automáticamente al Frontend:
-```bash
+### 2. Compilación de Contratos
+Cada vez que modifiques el código de un archivo `.sol` dentro de `contracts/`, debes recompilar el proyecto para generar los nuevos ABIs y enviarlos al frontend:
+
+```code
 npx hardhat compile
 ```
 
-## 3. Ejecutar Pruebas
-Para ejecutar los tests del proyecto:
-```bash
+### 3. Ejecutar Pruebas
+Para correr los tests automatizados del proyecto:
+
+```code
 npx hardhat test
 ```
+### 4. Levantar el Servidor Local (Nodo)
+Enciende la simulación de blockchain local y **deja esta terminal abierta**:
 
-## 4. Levantar el Servidor Local (Nodo)
-Para simular la blockchain de Ethereum y poder interactuar con ella desde la página web, enciende el nodo local. **Deja esta terminal abierta**:
-```bash
+```code
 npx hardhat node
 ```
 
-## 5. Deslpiegue de Contratos
-Con el nodo encendido, abre **otra terminal**, asegúrate de estar en la carpeta ``backend`` y ejecuta el script de despliegue:
-```bash
-npx hardhat ignition deploy ignition/modules/TraDeck.ts --network localhost
-```
+### 5. Despliegue de Contratos (Local)
+Abre **otra terminal** en la carpeta `backend` y ejecuta el script de despliegue recomendado que sincroniza automáticamente las direcciones:
 
-**Importante para el Frontend**: > Al ejecutar el comando de despliegue, la terminal te devolverá dos direcciones (ej: 0x5Fb...). Cópialas y úsalas en el código de React para conectar la dApp con los contratos TraDeckCoin y TraDeckNFT
-
-Alternativa recomendada para no copiar manualmente:
-
-```bash
+```code
 npm run deploy:local:sync
 ```
 
-### Sepolia (deploy + sync)
+*(Alternativamente, puedes usar `npx hardhat ignition deploy ignition/modules/TraDeck.ts --network localhost` y copiar las direcciones manualmente).*
 
-1. Configura `.env` en raiz con `SEPOLIA_RPC_URL` y `PRIVATE_KEY`
+### 6. Despliegue en Sepolia
+Si has realizado cambios en los contratos y quieres actualizar la versión pública:
+1. Configura el archivo `.env` en la raíz del backend con tu `SEPOLIA_RPC_URL` y tu `PRIVATE_KEY`.
 2. Ejecuta:
 
-```bash
-cd backend
+```code
 npm run deploy:sepolia:sync
 ```
 
-3. Arranca frontend y selecciona red Sepolia en la UI
-
-# Sample Hardhat 3 Beta Project (`mocha` and `ethers`)
-
-This project showcases a Hardhat 3 Beta project using `mocha` for tests and the `ethers` library for Ethereum interactions.
-
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
-
-## Project Overview
-
-This example project includes:
-
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using `mocha` and ethers.js
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
-
-## Usage
-
-### Running Tests
-
-To run all the tests in the project, execute the following command:
-
-```shell
-npx hardhat test
-```
-
-You can also selectively run the Solidity or `mocha` tests:
-
-```shell
-npx hardhat test solidity
-npx hardhat test mocha
-```
-
-### Make a deployment to Sepolia
-
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
-
-To run the deployment to a local chain:
-
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
-
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
-
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
-
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
-
-After setting the variable, you can run the deployment with the Sepolia network:
-
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
+3. Arranca el frontend y selecciona la red Sepolia en la interfaz de usuario.
