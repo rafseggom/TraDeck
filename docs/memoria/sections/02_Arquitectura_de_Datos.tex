@@ -1,8 +1,9 @@
 \chapter{Arquitectura de Datos}\label{cap:arquitectura}
 \section{Introducción}
-Breve introducción al capítulo
+En este capítulo se detalla cómo TraDeck utiliza la red Ethereum y sistemas descentralizados para la persistencia y modelado de sus activos.
 
 \section{El Ledger de Ethereum como Sistema de Persistencia}
+La blockchain de Ethereum actúa como nuestra base de datos distribuida. A diferencia de un sistema SQL, la persistencia es inmutable y cada cambio de estado requiere un consenso en la red.
 
 \section{Modelado de Activos: Estándares ERC-20 y ERC-721}
 La arquitectura de TraDeck se apoya en dos estándares fundamentales de Ethereum para separar la lógica
@@ -43,13 +44,13 @@ Por ello, aplicamos una división de datos:
     \item \textbf{Datos On-Chain}. \\ Solo se persisten en la blockchain los datos considerados críticos 
     que garantizan la titularidad:
     \begin{itemize}
-        \item \textbf{tokenId:} ID de la carta. % Corregido: decía tokenIf
+        \item \textbf{tokenId:} ID de la carta. 
         \item \textbf{owner:} Dirección del propietario.
         \item \textbf{tokenURI:} Un puntero o enlace al alojamiento externo.
     \end{itemize}
 
     \item \textbf{Datos Off-Chain}. \\ El \texttt{tokenURI} se diseña para que resuelva a un documento JSON alojado en la 
-    red descentralizada IPFS. Este archivo contiene los datos pesados de la carta: % Corregido: comillas Markdown eliminadas
+    red descentralizada IPFS. Este archivo contiene los datos pesados de la carta: 
 
     \begin{lstlisting}[language=json, caption=Ejemplo de tokenURI apuntando a IPFS]
 {
@@ -76,5 +77,19 @@ tokens (fungibles y no fungibles) dentro de un mismo contrato. Sin embargo, se d
     adicional que introduciría el ERC-1155.
 \end{itemize}
 
-\section{Estrategia de Almacenamiento Off-chain mediante IPFS}
+\section{Integridad Referencial: Almacenamiento Off-chain mediante IPFS}
+
+La decisión de almacenar los metadatos y los activos multimedia fuera de la blockchain (off-chain) resuelve el problema de los costes de persistencia pero introduce otro nuevo desafío arquitectónico: \textbf{¿Cómo podemos garantizar que los datos guardados off-chain, externos, no son alterados, perdiendo así la integridad de la base de datos distribuida?}
+
+Si utilizáramos un servidor centralizado tradicional (como Amazon S3 o incluso Google Drive) mediante un enlace HTTP estándar, estaríamos utilizando un \textit{direccionamiento por ubicación} (Location-Addressing), lo cual permite a un administrador o cualquier intruso no autorizado alterar el archivo JSON o la imagen en el servidor sin que cambie la URL: el Smart Contract apuntaría a la misma dirección pero el activo digital habría sido falsificado.
+
+Para solucionar este problema de integridad, TraDeck utiliza \textbf{IPFS (InterPlanetary File System)}, una red de almacenamiento descentralizada basada en \textit{direccionamiento por contenido} (Content-Addressing):
+
+\begin{itemize}
+	\item \textbf{Identificador de Contenido (CID):} En lugar de usar una ruta estática, IPFS procesa el archivo (la imagen o el JSON) a través de una función hash criptográfica, generando un identificador único (CID).
+	\item \textbf{Garantía de Inmutabilidad:} El \texttt{tokenURI} que se persiste en la blockchain es, en realidad, este CID. Si cualquier nodo o usuario intentara modificar un solo bit de la imagen o de la descripción de la carta, el hash resultante cambiaría, sería completamente distinto. 
+	\item \textbf{Verificación P2P:} Como la blockchain guarda el CID original de forma inmutable, cualquier alteración en el almacenamiento off-chain rompería el enlace en la cadena, el enlace criptográfico. Esto hace que la base de datos híbrida (Blockchain + IPFS) sea a prueba de manipulaciones sin requerir confianza en un servidor central.
+\end{itemize}
+
+Mediante esta arquitectura, logramos un equilibrio: la eficiencia económica de no saturar el ledger de Ethereum, manteniendo la robustez transaccional e inmutabilidad estricta exigida en un sistema de bases de datos de alta seguridad.
 

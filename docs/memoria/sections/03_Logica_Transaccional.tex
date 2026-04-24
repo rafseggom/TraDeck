@@ -1,0 +1,20 @@
+\chapter{Lógica Transaccional}\label{cap:logica}
+
+\section{Introducción}
+En este capítulo se describe la lógica de negocio implementada en los Smart Contracts, analizando cómo se garantiza la integridad y atomicidad de los datos en la red Ethereum.
+
+\section{Estructuras de Datos y Mapeos}
+A diferencia de las bases de datos relacionales, en TraDeck la persistencia se gestiona mediante \textit{mappings} y \textit{structs} en Solidity. Se detallarán:
+\begin{itemize}
+	\item El estado de los balances en el contrato ERC20 (\texttt{TraDeckCoin}).
+	\item El registro de propiedad y metadatos en el contrato ERC721 (\texttt{TraDeckNFT}).
+\end{itemize}
+
+\section{Atomicidad en el Intercambio (Atomic Swaps)}
+Explicación del flujo transaccional donde dos activos cambian de dueño en una única operación atómica, garantizando que no existan estados inconsistentes (pérdida de una carta sin recibir la otra).
+
+\section{Garantía de Depósito (Escrow Seguro)}
+Análisis del flujo de compraventa: retención de fondos, estados de la transacción (\texttt{Pending}, \texttt{Completed}, \texttt{Cancelled}) y cómo el contrato actúa como tercero de confianza.
+
+\section{Conclusiones del capítulo}
+Se ha definido una lógica que sustituye los procedimientos almacenados tradicionales por código ejecutable en la cadena de bloques, asegurando la integridad de los datos.
