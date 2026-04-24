@@ -1,9 +1,41 @@
 \chapter{Arquitectura de Datos}\label{cap:arquitectura}
 \section{Introducción}
-En este capítulo se detalla cómo TraDeck utiliza la red Ethereum y sistemas descentralizados para la persistencia y modelado de sus activos.
+En este capítulo se detalla la arquitectura de persistencia de TraDeck, analizando cómo se utiliza la red Ethereum y diversos sistemas descentralizados para el modelado y la custodia de activos digitales. A diferencia de las arquitecturas tradicionales basadas en servidores centrales, TraDeck delega la integridad de los datos en un \textit{ledger} distribuido e inmutable\textbf{\cite{ethereum_whitepaper}}.
 
-\section{El Ledger de Ethereum como Sistema de Persistencia}
-La blockchain de Ethereum actúa como nuestra base de datos distribuida. A diferencia de un sistema SQL, la persistencia es inmutable y cada cambio de estado requiere un consenso en la red.
+\section{Verificación de autenticidad mediante el histórico de bloques}
+La autenticidad de un item en la cadena de bloques no depende de una autoridad central, es descentralizado, en nuestro caso, la autenticidad de una carta en TraDeck. Cada activo, tokenizado como un token no fungible (NFT) tiene un identificador cuya validez se verifica mediante la continuidad del libro contable, el ledger.
+
+Si definimos un bloque como $B_n$, su validez está condicionada por la inclusión del identificador único del bloque anterior, creando una estructura de punteros \textit{hash}. Formalmente, un bloque se define como:
+
+\begin{equation}
+	B_n = \{T_x, \text{MerkleRoot}, \text{Hash}(B_{n-1}), \text{Timestamp}\}
+\end{equation}
+
+Donde $T_x$ representa el conjunto de transacciones y \text{MerkleRoot} es la raíz del árbol de Merkle que resume la integridad de dichas transacciones\textbf{\cite{nakamoto2008bitcoin}}. Esta arquitectura asegura que para falsificar la procedencia de una carta en un bloque histórico $B_{n-1}$, un atacante debería recalcular los \textit{hashes} de todos los bloques subsiguientes $B_n, B_{n+1}, \dots, B_{n+m}$ antes de que la red alcance un nuevo consenso, lo cual es computacionalmente inviable.
+
+En TraDeck, la \textbf{originalidad} de un token se define como la existencia de un evento de \textit{Minting} (acuñación o valoración) válido, seguido de una cadena ininterrumpida de transferencias firmadas digitalmente por los poseedores legítimos de las claves privadas.
+
+\subsection{Estructura Técnica del Bloque e Integridad}
+A diferencia de una fila en una tabla SQL, un registro en TraDeck está protegido por un árbol de Merkle. Como se observa en la Figura \ref{fig:block_structure}, cualquier alteración en un solo bit de los datos de una carta (como su ID o su metadato IPFS) alteraría la raíz del árbol, invalidando el bloque completo y rompiendo la confianza de los nodos vecinos.
+
+\begin{figure}[H]
+	\centering
+	 
+	\includegraphics[width=0.7\textwidth]{img/arbol_merkle.png}
+	\caption{Arquitectura técnica de un bloque: Relación entre el árbol de Merkle y el encadenamiento de hashes anteriores.}
+	\label{fig:block_structure}
+\end{figure}
+
+\subsection{Consistencia y Finalidad de las Transacciones}
+La seguridad de una operación de intercambio aumenta exponencialmente con el tiempo. El concepto de "confirmaciones" indica cuántos bloques han sido añadidos encima del bloque $N$ que contiene la transacción. En TraDeck, consideramos que una transferencia tiene finalidad absoluta tras $M$ confirmaciones, lo que garantiza que la base de datos es consistente y resistente a ataques de reorganización (Figura \ref{fig:confirmaciones}).
+
+\begin{figure}[H]
+	\centering
+	 
+	\includegraphics[width=0.9\textwidth]{img/bloques.jpg}
+	\caption{Línea de tiempo de confirmaciones: Aumento del grado de seguridad y enterramiento de la transacción conforme avanza el ledger.}
+	\label{fig:confirmaciones}
+\end{figure}
 
 \section{Modelado de Activos: Estándares ERC-20 y ERC-721}
 La arquitectura de TraDeck se apoya en dos estándares fundamentales de Ethereum para separar la lógica
@@ -23,7 +55,7 @@ de TDC es idéntica a otra, permitiendo transacciones fluidas y eficientes.
 \subsection{Capa de Propiedad: ERC-721 (TraDeckNFT)}
 El estándar \textbf{ERC-721} \cite{openzeppelin_erc721} permite representar cada carta como un objeto 
 único e indivisible. En nuestra arquitectura, el NFT actúa como la clave primaria y el certificado de 
-propiedad irrefutable de cada carta coleccionable.
+propiedad irrefutable\textbf{\cite{antonopoulos2018mastering}} de cada carta coleccionable.
 
 \subsubsection{Estructura de Datos y Mappings}
 A diferencia de los sistemas de gestión de bases de datos tradicionales que usan tablas relacionales 
@@ -91,5 +123,5 @@ Para solucionar este problema de integridad, TraDeck utiliza \textbf{IPFS (Inter
 	\item \textbf{Verificación P2P:} Como la blockchain guarda el CID original de forma inmutable, cualquier alteración en el almacenamiento off-chain rompería el enlace en la cadena, el enlace criptográfico. Esto hace que la base de datos híbrida (Blockchain + IPFS) sea a prueba de manipulaciones sin requerir confianza en un servidor central.
 \end{itemize}
 
-Mediante esta arquitectura, logramos un equilibrio: la eficiencia económica de no saturar el ledger de Ethereum, manteniendo la robustez transaccional e inmutabilidad estricta exigida en un sistema de bases de datos de alta seguridad.
+Mediante esta arquitectura, logramos un equilibrio: la eficiencia económica de no saturar el ledger de um, manteniendo la robustez transaccional e inmutabilidad estricta exigida en un sistema de bases de datos de alta seguridad.
 
