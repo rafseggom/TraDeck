@@ -161,3 +161,18 @@
       {8}{{{\color{nblue}8}}}{1}
       {9}{{{\color{nblue}9}}}{1},
 }
+
+\lstdefinelanguage{Solidity}{
+    keywords={contract, struct, enum, mapping, public, private, internal, external, pure, view, payable, returns, return, require, revert, address, uint256, bool, string, memory, storage, calldata, event, indexed, emit, constructor, function, modifier, true, false},
+    keywordstyle=\color{blue}\bfseries,
+    ndkeywords={TradeState, Trade, CardData, SwapOffer},
+    ndkeywordstyle=\color{teal}\bfseries,
+    identifierstyle=\color{black},
+    sensitive=false,
+    comment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    commentstyle=\color{gray}\ttfamily,
+    stringstyle=\color{red}\ttfamily,
+    morestring=[b]',
+    morestring=[b]"
+}

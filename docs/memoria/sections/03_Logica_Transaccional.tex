@@ -1,34 +1,101 @@
 \chapter{Lógica Transaccional y Seguridad}\label{cap:logica}
 
 \section{Introducción}
-En este capítulo se describe la lógica de negocio implementada en los Smart Contracts de TraDeck. A diferencia de las arquitecturas tradicionales donde la lógica reside en un servidor de aplicaciones, aquí el propio motor de persistencia (la EVM de Ethereum) garantiza la integridad, atomicidad y consistencia de los datos en cada cambio de estado.
+En este capítulo se describe la lógica de negocio implementada en los Smart Contracts de TraDeck. 
+A diferencia de las arquitecturas tradicionales donde la lógica reside en un servidor de aplicaciones, 
+aquí el propio motor de persistencia (la EVM de Ethereum) garantiza la integridad, atomicidad y consistencia 
+de los datos en cada cambio de estado.
 
 \section{Estructuras de Datos y Mapeos}
-La persistencia en TraDeck no utiliza tablas relacionales, sino estructuras de datos nativas de Solidity que optimizan el acceso y el coste de gas:
+La persistencia en TraDeck no utiliza tablas relacionales, sino estructuras de datos nativas de Solidity 
+que optimizan el acceso y el coste de gas:
 \begin{itemize}
-	\item \textbf{Balances (ERC-20):} En el contrato \texttt{TraDeckCoin}, el estado se gestiona mediante un \texttt{mapping(address => uint256)}. Esto equivale a una tabla de saldos indexada por la clave pública del usuario.
-	\item \textbf{Propiedad y Metadatos (ERC-721):} El contrato \texttt{TraDeckNFT} utiliza un \texttt{mapping(uint256 => address)} para registrar quién es el titular de cada \texttt{tokenId}. Los metadatos extendidos se vinculan mediante un \texttt{struct} que almacena el precio y el estado de disponibilidad.
+	\item \textbf{Balances (ERC-20):} En el contrato \texttt{TraDeckCoin}, el estado se gestiona mediante 
+	un \texttt{mapping(address => uint256)}. Esto equivale a una tabla de saldos indexada por la clave pública del usuario.
+	\item \textbf{Propiedad y Metadatos (ERC-721):} El contrato \texttt{TraDeckNFT} utiliza un \texttt{mapping
+	(uint256 => address)} para registrar quién es el titular de cada \texttt{tokenId}. Los metadatos extendidos 
+	se vinculan mediante un \texttt{struct} que almacena el precio y el estado de disponibilidad.
 \end{itemize}
 
-\section{Atomicidad en el Intercambio (Atomic Swaps)}
-La propiedad de \textbf{Atomicidad} es crítica en TraDeck. En un trueque de cartas (NFT por NFT), el sistema debe asegurar que ambas transferencias ocurran simultáneamente o que ninguna se ejecute. 
+\subsection{Máquina de Estados de Mercado}
+Para gestionar el ciclo de vida de una carta, se ha implementado una máquina de estados finita mediante
+el enumerado \texttt{TradeState}. Esto asegura que una carta no pueda ser comprada si no ha sido listada
+previamente, o que no se pueda modificar su precio mientras hay una transacción en curso.\\
 
-A través de las funciones \texttt{proposeSwap} y \texttt{acceptSwap}, el contrato inteligente empaqueta ambas operaciones en una única transacción de la blockchain. Si el receptor de la oferta no posee la carta prometida al intentar aceptar el trato, la transacción completa falla y se produce un \textit{rollback} automático, dejando los activos en sus dueños originales y evitando estados inconsistentes.
+\begin{lstlisting}[language=Solidity, caption=Definición de estados y estructura de intercambio]
+enum TradeState {NotListed, Listed, InEscrow}
+
+struct Trade {
+	address seller;
+	address buyer;
+	uint256 price;
+	TradeState state;
+}
+
+mapping(uint256 => Trade) public trades;
+\end{lstlisting}
+
+\subsection{Optimización de Lectura (Patrón DTO)}
+Uno de los mayores retos en Web3 es la latencia de las consultas a la red. Para evitar 
+que el \textit{frontend} realice demasiadas peticiones, se ha diseñado la estructura \texttt{CardData}.
+Esta actúa como un objeto de transferencia de datos que agrupa toda la información de una carta.\\
+
+\begin{lstlisting}[language=Solidity, caption=Estructura optimizada para la integración con el Frontend]
+struct CardData {
+	uint256 tokenId;
+	address owner;
+	string tokenUri;
+	Trade trade;
+	SwapOffer swapOffer;
+}
+\end{lstlisting}
+
+Mediante la función \texttt{getAllCards()}, el sistema devuelve una lista de estas estructuras,
+permitiendo que la aplicación React cargue todo el mercado en una sola petición RPC;
+mejorando drásticamente la experiencia de usuario.
+
+\section{Atomicidad en el Intercambio (Atomic Swaps)}
+La propiedad de \textbf{Atomicidad} es crítica en TraDeck. En un trueque de cartas 
+(NFT por NFT), el sistema debe asegurar que ambas transferencias ocurran simultáneamente 
+o que ninguna se ejecute. 
+
+A través de la estructura \texttt{SwapOffer}, el contrato registra las propuestas de 
+intercambio. Gracias a las funciones \texttt{proposeSwap} y \texttt{acceptSwap}, el contratO 
+inteligente empaqueta ambas operaciones en una única transacción de la blockchain. 
+Si el receptor de la oferta no posee la carta prometida al intentar aceptar el 
+trato, la transacción completa falla y se produce un \textit{rollback} automático, 
+dejando los activos en sus dueños originales y evitando estados inconsistentes.
 
 \section{Garantía de Depósito (Escrow Seguro)}
-Para las transacciones de compraventa, se ha diseñado una máquina de estados que actúa como un tercero de confianza automatizado:
+Para las transacciones de compraventa, se ha diseñado una máquina de estados que 
+actúa como un tercero de confianza automatizado basado en las funciones del contrato:
 \begin{enumerate}
-	\item \textbf{Listado:} El vendedor invoca \texttt{listForSale}, transfiriendo la custodia del NFT al contrato inteligente (\texttt{address(this)}). El activo queda bloqueado.
-	\item \textbf{Compromiso:} El comprador ejecuta \texttt{buyCard}, depositando los tokens \texttt{TDKC} en el contrato. El sistema alcanza el estado \textit{InEscrow}.
-	\item \textbf{Liquidación:} Al confirmar la recepción (\texttt{confirmDelivery}), el contrato libera los fondos al vendedor y el NFT al comprador en una operación atómica.
+	\item \textbf{Listado:} El vendedor invoca \texttt{listForSale}, transfiriendo 
+		la custodia del NFT al contrato inteligente (\texttt{address(this)}). 
+		El activo queda bloqueado y el estado cambia a \texttt{Listed}.
+	\item \textbf{Compromiso:} El comprador ejecuta \texttt{buyCard}, depositando 
+		los tokens \texttt{TDKC} en el contrato. El sistema alcanza el estado 
+		\textit{InEscrow} y bloquea los fondos.
+	\item \textbf{Liquidación:} El comprador confirma la recepoción (\texttt{confirmDelivery}), 
+		lo que dispara la liberación simultánea de los fondos al vendedor y el NFT al comprador en una 
+		operación atómica.
 \end{enumerate}
 
 \section{Seguridad y Mitigación de Riesgos}
-Como sistema de base de datos crítica, TraDeck incorpora:
+TraDeck implementa varias medidas de seguridad a nivel de protocolo para proteger
+la integridad de las transacciones y la propiedad de los activos:
 \begin{itemize}
-	\item \textbf{Validación de Identidad:} Uso estricto de \texttt{msg.sender} para asegurar que solo el propietario legítimo de un activo puede modificar su estado.
-	\item \textbf{Prevención de Reentrada:} Implementación del patrón \textit{Checks-Effects-Interactions} para garantizar que el estado interno se actualiza antes de realizar transferencias externas, evitando vulnerabilidades de doble gasto.
+	\item \textbf{Validación de Identidad:} Uso estricto de \texttt{msg.sender} 
+	combinado con \texttt{require} para asegurar que solo el propietario 
+	legítimo de un activo puede modificar su estado.
+	\item \textbf{Prevención de Reentrada:} Implementación del patrón 
+	\textit{Checks-Effects-Interactions} para garantizar que el estado 
+	interno se actualiza antes de realizar transferencias externas, evitando 
+	vulnerabilidades de doble gasto.
 \end{itemize}
 
 \section{Conclusiones del capítulo}
-La lógica implementada sustituye los procedimientos almacenados tradicionales por código inmutable en la cadena de bloques. Esto asegura que las reglas de negocio se cumplan siempre de forma determinista, garantizando una integridad de datos superior a la de los sistemas centralizados.
+La lógica implementada sustituye los procedimientos almacenados tradicionales por 
+código inmutable en la cadena de bloques. Esto asegura que las reglas de negocio 
+se cumplan siempre de forma determinista, garantizando una integridad de datos 
+superior a la de los sistemas centralizados.

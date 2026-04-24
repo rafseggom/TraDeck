@@ -27,7 +27,7 @@ A diferencia de una fila en una tabla SQL, un registro en TraDeck está protegid
 \end{figure}
 
 \subsection{Consistencia y Finalidad de las Transacciones}
-La seguridad de una operación de intercambio aumenta exponencialmente con el tiempo. El concepto de "confirmaciones" indica cuántos bloques han sido añadidos encima del bloque $N$ que contiene la transacción. En TraDeck, consideramos que una transferencia tiene finalidad absoluta tras $M$ confirmaciones, lo que garantiza que la base de datos es consistente y resistente a ataques de reorganización (Figura \ref{fig:confirmaciones}).
+La seguridad de una operación de intercambio aumenta exponencialmente con el tiempo. El concepto de <<confirmaciones>> indica cuántos bloques han sido añadidos encima del bloque $N$ que contiene la transacción. En TraDeck, consideramos que una transferencia tiene finalidad absoluta tras $M$ confirmaciones, lo que garantiza que la base de datos es consistente y resistente a ataques de reorganización (Figura \ref{fig:confirmaciones}).
 
 \begin{figure}[H]
 	\centering
@@ -123,5 +123,5 @@ Para solucionar este problema de integridad, TraDeck utiliza \textbf{IPFS (Inter
 	\item \textbf{Verificación P2P:} Como la blockchain guarda el CID original de forma inmutable, cualquier alteración en el almacenamiento off-chain rompería el enlace en la cadena, el enlace criptográfico. Esto hace que la base de datos híbrida (Blockchain + IPFS) sea a prueba de manipulaciones sin requerir confianza en un servidor central.
 \end{itemize}
 
-Mediante esta arquitectura, logramos un equilibrio: la eficiencia económica de no saturar el ledger de um, manteniendo la robustez transaccional e inmutabilidad estricta exigida en un sistema de bases de datos de alta seguridad.
+Mediante esta arquitectura, logramos un equilibrio: la eficiencia económica de no saturar el ledger de Ethereum, manteniendo la robustez transaccional e inmutabilidad estricta exigida en un sistema de bases de datos de alta seguridad.
 
