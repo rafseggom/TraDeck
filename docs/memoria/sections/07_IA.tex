@@ -1,16 +1,44 @@
 \chapter{Uso de Herramientas de Inteligencia Artificial}\label{cap:ia}
 
 \section{Declaración de uso}
-Siguiendo las instrucciones de la asignatura, se declara el uso de herramientas de IA generativa para la asistencia en el desarrollo de este trabajo.
+De acuerdo con las normativas de la asignatura, se declara el uso de herramientas de IA generativa (ChatGPT, Gemini y GitHub Copilot) como asistentes en las fases de ideación, implementación técnica del cliente web y refinamiento de la memoria técnica. Los autores asumen la responsabilidad total del contenido, habiendo supervisado, verificado y modificado cada fragmento de código y referencia bibliográfica integrada en el proyecto.
 
-\section{Herramientas Utilizadas}
+\section{Herramientas y Propósitos}
+El uso de estas herramientas se desglosa según las siguientes necesidades técnicas:
+
 \begin{itemize}
-	\item \textbf{ChatGPT/Claude (CBD):} Utilizado para la estructuración de la memoria, redacción de apartados teóricos y depuración de errores en el código Solidity.
-	\item \textbf{GitHub Copilot:} Utilizado como asistente de autocompletado de código durante la implementación del frontend en React.
+	\item \textbf{ChatGPT / Gemini (Asistencia Conversacional):} Utilizados en la fase inicial para el \textit{brainstorming} de la arquitectura de la dApp. Se debatió la viabilidad de usar un sistema de depósitos \textit{Escrow} frente a intercambios atómicos (\textit{Atomic Swaps}), decidiendo finalmente una implementación híbrida.
+	\item \textbf{GitHub Copilot (Modo Plan y Autocompletado):} Empleado como asistente en el desarrollo del frontend. Se utilizó para agilizar la creación de componentes de interfaz y la integración de las APIs externas de Scryfall (Magic: The Gathering) y Pokémon TCG. También se utilizó como asistente en el desarrollo, hizo una primera estructura de la interfaz frontent, ayudó a crear varios scripts personalizados para simplificar el trabajo (como \textit{Start-Local.cmd}, detallado en el Capítulo \ref{cap:manuales}) y ayudó a hacer funcionar MetaMask con nuestra aplicación. 
+	\item \textbf{Claude:} Utilizado para la identificación de errores de tipado en TypeScript y para asegurar la cohesión gramatical de los apartados teóricos de la memoria.
 \end{itemize}
 
-\section{Propósito y Metodología}
-La IA se ha utilizado para optimizar la redacción y resolver dudas técnicas. Todo el contenido generado ha sido revisado, corregido y validado por los autores, asegurando que el diseño de la arquitectura de datos es propio.
+\section{Metodología y Control de Calidad}
+El contenido generado no ha sido incorporado de forma directa. Se ha seguido un proceso de validación crítica: \textbf{Prompt $\rightarrow$ Generación $\rightarrow$ Revisión Técnica $\rightarrow$ Modificación Manual $\rightarrow$ Integración $\rightarrow$ Revisión manual}. 
 
-\section{Referencias a Prompts}
-Se adjuntan los enlaces a las conversaciones o los prompts principales utilizados: \url{http://enlace-a-tus-prompts.com}
+En el desarrollo de código se ha tomado un enfoque de planificación y conversación para mantener las ideas claras, evitar la sicofancia del modelo y ceñirnos a los requisitos: \textbf{Prompt (en modo Plan) $\rightarrow$ Aclarar dudas del modelo $\rightarrow$ Primera generación $\rightarrow$ Refinar conversando $\rightarrow$ Segunda generación (y repetir si es necesario) $\rightarrow$ Revisión Técnica $\rightarrow$ Modificación Manual $\rightarrow$ Integración $\rightarrow$ Revisión manual}. 
+
+En el desarrollo del frontend, se realizaron ajustes manuales significativos en la lógica de conexión con \textit{ethers.js} y en la gestión del \textit{Chain ID}. Las herramientas de IA presentaban soluciones genéricas que no contemplaban las particularidades de nuestro entorno de red local en Hardhat, por lo que la intervención humana fue necesaria para asegurar la funcionalidad del \textit{injected provider} siguiendo el estándar EIP-1193. La IA insistía mucho en usar métodos obsoletos como \textit{window.web3} y tuvimos que, manualmente, ajustarlo al estándar moderno \textit{window.ethereum} para gestionar mejor los cambios de red y de cuenta.
+
+\section{Prompts Significativos y Sesiones de Diseño}
+A continuación, se documentan las interacciones más críticas que definieron el rumbo del frontend y la arquitectura de datos.
+
+\textit{Nota:} Los prompts estan recortados para no entorpecer la lectura de la memoria. Los originales son mucho más largos, estamos en contra de usar la IA de la forma \textit{"hazme esto"}. Le hemos especificado requisitos, la hemos dirigido paso a paso, revisado todo lo que realizaba y le hemos pedido, explícitamente, que evite la sicofancia o que asienta con todo lo que le decimos. La hemos usado como herramienta, una herramienta muy útil que agiliza el trabajo tanto de investigación como de programación y que nos ha permitido no solo no reducir el alcance si no de aumentarlo.
+
+\subsection{Sesión de Diseño Inicial (Gemini)}
+Enlace a la conversación completa donde planteamos inicialmente la aplicación: \\ \url{https://gemini.google.com/share/add0194ba4c6}
+
+
+\subsection{Definición de Requisitos del Frontend (Copilot Plan Mode)}
+
+Este prompt fue importante para establecer el alcance de la interfaz y la integración con la base de datos distribuida e IPFS:
+
+\begin{quote}
+	\textit{"Vamos a analizar un proyecto de intercambio y compraventa de cartas TCG usando blockchain. Requisitos: Frontend en React/TS, login mediante MetaMask, detección automática de activos del usuario. Debe incluir creación manual de cartas (Minting) y buscador mediante APIs de Scryfall y Pokémon. Cada carta requiere: Nombre, Imagen y un número de serie PSA generado aleatoriamente. Implementar vista de mercado con historial de intercambios para verificar la trazabilidad en la blockchain. Uso de IPFS mediante el SDK de Pinata para la persistencia off-chain."}
+\end{quote}
+
+\subsection{Refinamiento de UI y Consistencia de Datos}
+Prompt utilizado para corregir problemas de legibilidad y estados de conexión:
+
+\begin{quote}
+	\textit{"Vamos a ajustar la interfaz: en Magic: The Gathering, permitir seleccionar versiones de la carta (estilo mtgprint). En 'Mi Colección', corregir el solapamiento de texto sobre las imágenes de los NFTs. Añadir un indicador visual de estado (Tick verde / X roja) para verificar la sincronización entre el Chain ID de la wallet y el Chain ID de la red Hardhat (31337)."}
+\end{quote}
