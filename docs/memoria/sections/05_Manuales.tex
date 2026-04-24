@@ -5,7 +5,7 @@ Este capítulo sirve como guía para desplegar la dApp TraDeck.
 
 Se proporcionará, además, un despliegue en línea con el fin de evitar los problemas para desplegarlo local. Es importante destacar que, al utilizar servicios de alojamiento gratuitos, la infraestructura puede entrar en estado de reposo tras periodos de inactividad. Recomendamos encarecidamente que usen el despliegue en línea ya que la aplicación necesita de muchas claves y variables de entorno y, si usan la web desplegada, tan solo necesitarán realizar los pasos finales de instalar MetaMask y conseguir Sepolia con un faucet.
 
-Para garantizar un funcionamiento del \textbf{100\%} de las capacidades de la aplicación, se recomienda seguir el flujo de activación descrito a continuación:
+Para garantizar un funcionamiento del \textbf{100\%} de las capacidades de la aplicación se recomienda abrir la capa de servicio y esperar a que redirija automáticamente a la capa de aplicación. Hemos añadido un ping a la capa de aplicación en caso de que el redirect no funcione, por lo que abrir la capa de aplicación debería también despertar a la capa de servicio.
 
 \begin{itemize}
 	\item \textbf{Capa de Servicio (Proxy):} \url{https://tradeck.onrender.com/}
@@ -15,6 +15,13 @@ Para garantizar un funcionamiento del \textbf{100\%} de las capacidades de la ap
 \textit{Nota de uso:} Debido a que estamos usando la capa gratuita de los servicios, es aconsejable acceder primero a la URL del proxy. Una vez que el servicio de Render se haya activado (despertado), se producirá la redirección automática al frontend, asegurando que la comunicación con los servicios de IPFS y las variables de entorno está plenamente operativa.
 
 \section{Manual de Despliegue (Administrador)}
+
+\subsection{Obtención del Código Fuente}
+El primer paso para el despliegue es clonar el repositorio oficial del proyecto:
+\begin{center}
+	\texttt{git clone https://github.com/rafseggom/TraDeck}
+\end{center}
+
 El sistema requiere la configuración de múltiples variables de entorno para orquestar la comunicación entre la Blockchain, el almacenamiento IPFS y la interfaz.
 
 \subsection{Configuración de Variables de Entorno (.env)}

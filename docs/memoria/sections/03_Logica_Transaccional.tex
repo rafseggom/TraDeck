@@ -64,6 +64,17 @@ Mediante la función \texttt{getAllCards()}, el sistema devuelve una lista de es
 permitiendo que la aplicación React cargue todo el mercado en una sola petición RPC;
 mejorando drásticamente la experiencia de usuario.
 
+\subsubsection{Optimización de Lectura: Del Escaneo de Eventos al Estado Directo}
+Otro de los mayores desafíos técnicos enfrentados fue la latencia en la recuperación de datos. Inicialmente, se consideró un modelo basado en la escucha y filtrado de eventos históricos (logs) de la blockchain. Sin embargo, este enfoque presentaba un problema de escalabilidad crítico: a medida que los activos quedaban "hundidos" miles de bloques por detrás en el \textit{ledger}, la capacidad de los nodos RPC para filtrar y devolver esa información se degradaba exponencialmente, llegando a necesitar más de 720 llamadas para obtener el estado de una carta, limitado a 5 llamadas por segundo que se pueden realizar usando Alchemy en su capa gratuita.
+
+Para solventar esta limitación, se optó por una arquitectura de \textbf{lectura directa de estado}. En lugar de reconstruir el inventario a partir del historial, se diseñó la estructura \texttt{CardData}, previamente explicada. Esta permite que la función \texttt{getAllCards()} actúe como un punto de acceso único que devuelve una instantánea completa del mercado. 
+
+Esta transición técnica permitió:
+\begin{itemize}
+	\item \textbf{Latencia Constante:} El tiempo de respuesta es independiente de la profundidad del bloque en el que se creó la carta.
+	\item \textbf{Eficiencia RPC:} Se reduce el número de peticiones al nodo de múltiples llamadas de filtrado a una única llamada de lectura de estado (\textit{view call}).
+\end{itemize}
+
 \section{Atomicidad en el Intercambio (Atomic Swaps)}
 La propiedad de \textbf{Atomicidad} es crítica en TraDeck. En un trueque de cartas 
 (NFT por NFT), el sistema debe asegurar que ambas transferencias ocurran simultáneamente 
@@ -95,8 +106,15 @@ actúa como un tercero de confianza automatizado basado en las funciones del con
 		Si la transferencia de fondos al contrato es exitosa, el estado pasa a \textit{InEscrow} y bloquea los fondos.
 	\item \textbf{Liquidación:} El comprador confirma la recepción (\texttt{confirmDelivery}), 
 		lo que dispara la liberación simultánea de los fondos al vendedor y el NFT al comprador en una 
-		operación atómica.
+		operación atómica. En el supuesto de que el comprador no confirme la recepción de los bienes no se libera su NFT, por lo que a partir de ese momento contaría con una carta falsificada o no verificable. 
 \end{enumerate}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{img/escrow.png}
+	\caption{Funcionamiento de escrow: Flujo en el intercambio de activos en red blockchain.}
+	\label{fig:escrow}
+\end{figure}
 
 \section{Seguridad y Mitigación de Riesgos}
 TraDeck implementa varias medidas de seguridad a nivel de protocolo para proteger
