@@ -17,6 +17,14 @@ que optimizan el acceso y el coste de gas:
 	se vinculan mediante un \texttt{struct} que almacena el precio y el estado de disponibilidad.
 \end{itemize}
 
+\subsection{Emisión de Activos (Minting)}
+El punto de entrada de datos en la base de datos distribuida es la función \texttt{mintCard}. A diferencia de los 
+contratos donde todo el estado se define en el constructor, TraDeck permite la creación dinámica de activos.\\
+
+El usuario que invoca la función de minting se convierte en el propietario inicial del token\texttt{\_mint(msg.sender, tokenId)} 
+y el contrato vincula el \texttt{tokenURI} al nuevo activo en una sola transacción, garantizando que la información de propiedad 
+y metadatos se registre de forma atómica e inmutable desde el momento de su creación.
+
 \subsection{Máquina de Estados de Mercado}
 Para gestionar el ciclo de vida de una carta, se ha implementado una máquina de estados finita mediante
 el enumerado \texttt{TradeState}. Esto asegura que una carta no pueda ser comprada si no ha sido listada
@@ -66,6 +74,10 @@ Si el receptor de la oferta no posee la carta prometida al intentar aceptar el
 trato, la transacción completa falla y se produce un \textit{rollback} automático, 
 dejando los activos en sus dueños originales y evitando estados inconsistentes.
 
+Además, se expone la función \texttt{cancelSwap}, que permite al proponente eliminar 
+su oferta de forma unilateral (borrando la estructura \texttt{SwapOffer} del mapeo) 
+siempre que no haya sido aceptada previamente.
+
 \section{Garantía de Depósito (Escrow Seguro)}
 Para las transacciones de compraventa, se ha diseñado una máquina de estados que 
 actúa como un tercero de confianza automatizado basado en las funciones del contrato:
@@ -74,8 +86,11 @@ actúa como un tercero de confianza automatizado basado en las funciones del con
 		la custodia del NFT al contrato inteligente (\texttt{address(this)}). 
 		El activo queda bloqueado y el estado cambia a \texttt{Listed}.
 	\item \textbf{Compromiso:} El comprador ejecuta \texttt{buyCard}, depositando 
-		los tokens \texttt{TDKC} en el contrato. El sistema alcanza el estado 
-		\textit{InEscrow} y bloquea los fondos.
+		los tokens \texttt{TDKC} en el contrato. . A nivel de código, el contrato no 
+		puede quitarle los tokens al usuario. Se utiliza la función 
+		\texttt{transferFrom} de la interfaz ERC-20, lo que exige que el comprador 
+		haya firmado previamente una transacción de aprobación (\texttt{approve}). 
+		Si la transferencia de fondos al contrato es exitosa, el estado pasa a \textit{InEscrow} y bloquea los fondos.
 	\item \textbf{Liquidación:} El comprador confirma la recepoción (\texttt{confirmDelivery}), 
 		lo que dispara la liberación simultánea de los fondos al vendedor y el NFT al comprador en una 
 		operación atómica.
