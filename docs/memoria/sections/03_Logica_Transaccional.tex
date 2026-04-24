@@ -1,20 +1,34 @@
-\chapter{Lógica Transaccional}\label{cap:logica}
+\chapter{Lógica Transaccional y Seguridad}\label{cap:logica}
 
 \section{Introducción}
-En este capítulo se describe la lógica de negocio implementada en los Smart Contracts, analizando cómo se garantiza la integridad y atomicidad de los datos en la red Ethereum.
+En este capítulo se describe la lógica de negocio implementada en los Smart Contracts de TraDeck. A diferencia de las arquitecturas tradicionales donde la lógica reside en un servidor de aplicaciones, aquí el propio motor de persistencia (la EVM de Ethereum) garantiza la integridad, atomicidad y consistencia de los datos en cada cambio de estado.
 
 \section{Estructuras de Datos y Mapeos}
-A diferencia de las bases de datos relacionales, en TraDeck la persistencia se gestiona mediante \textit{mappings} y \textit{structs} en Solidity. Se detallarán:
+La persistencia en TraDeck no utiliza tablas relacionales, sino estructuras de datos nativas de Solidity que optimizan el acceso y el coste de gas:
 \begin{itemize}
-	\item El estado de los balances en el contrato ERC20 (\texttt{TraDeckCoin}).
-	\item El registro de propiedad y metadatos en el contrato ERC721 (\texttt{TraDeckNFT}).
+	\item \textbf{Balances (ERC-20):} En el contrato \texttt{TraDeckCoin}, el estado se gestiona mediante un \texttt{mapping(address => uint256)}. Esto equivale a una tabla de saldos indexada por la clave pública del usuario.
+	\item \textbf{Propiedad y Metadatos (ERC-721):} El contrato \texttt{TraDeckNFT} utiliza un \texttt{mapping(uint256 => address)} para registrar quién es el titular de cada \texttt{tokenId}. Los metadatos extendidos se vinculan mediante un \texttt{struct} que almacena el precio y el estado de disponibilidad.
 \end{itemize}
 
 \section{Atomicidad en el Intercambio (Atomic Swaps)}
-Explicación del flujo transaccional donde dos activos cambian de dueño en una única operación atómica, garantizando que no existan estados inconsistentes (pérdida de una carta sin recibir la otra).
+La propiedad de \textbf{Atomicidad} es crítica en TraDeck. En un trueque de cartas (NFT por NFT), el sistema debe asegurar que ambas transferencias ocurran simultáneamente o que ninguna se ejecute. 
+
+A través de las funciones \texttt{proposeSwap} y \texttt{acceptSwap}, el contrato inteligente empaqueta ambas operaciones en una única transacción de la blockchain. Si el receptor de la oferta no posee la carta prometida al intentar aceptar el trato, la transacción completa falla y se produce un \textit{rollback} automático, dejando los activos en sus dueños originales y evitando estados inconsistentes.
 
 \section{Garantía de Depósito (Escrow Seguro)}
-Análisis del flujo de compraventa: retención de fondos, estados de la transacción (\texttt{Pending}, \texttt{Completed}, \texttt{Cancelled}) y cómo el contrato actúa como tercero de confianza.
+Para las transacciones de compraventa, se ha diseñado una máquina de estados que actúa como un tercero de confianza automatizado:
+\begin{enumerate}
+	\item \textbf{Listado:} El vendedor invoca \texttt{listForSale}, transfiriendo la custodia del NFT al contrato inteligente (\texttt{address(this)}). El activo queda bloqueado.
+	\item \textbf{Compromiso:} El comprador ejecuta \texttt{buyCard}, depositando los tokens \texttt{TDKC} en el contrato. El sistema alcanza el estado \textit{InEscrow}.
+	\item \textbf{Liquidación:} Al confirmar la recepción (\texttt{confirmDelivery}), el contrato libera los fondos al vendedor y el NFT al comprador en una operación atómica.
+\end{enumerate}
+
+\section{Seguridad y Mitigación de Riesgos}
+Como sistema de base de datos crítica, TraDeck incorpora:
+\begin{itemize}
+	\item \textbf{Validación de Identidad:} Uso estricto de \texttt{msg.sender} para asegurar que solo el propietario legítimo de un activo puede modificar su estado.
+	\item \textbf{Prevención de Reentrada:} Implementación del patrón \textit{Checks-Effects-Interactions} para garantizar que el estado interno se actualiza antes de realizar transferencias externas, evitando vulnerabilidades de doble gasto.
+\end{itemize}
 
 \section{Conclusiones del capítulo}
-Se ha definido una lógica que sustituye los procedimientos almacenados tradicionales por código ejecutable en la cadena de bloques, asegurando la integridad de los datos.
+La lógica implementada sustituye los procedimientos almacenados tradicionales por código inmutable en la cadena de bloques. Esto asegura que las reglas de negocio se cumplan siempre de forma determinista, garantizando una integridad de datos superior a la de los sistemas centralizados.

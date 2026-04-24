@@ -15,7 +15,7 @@ Aunque Remix proporciona una interfaz web excelente para pruebas rápidas y prot
 	\item \textbf{Usuarios de Prueba:} De forma nativa Hard Hat aporta 10 carteras, con dirección privada y pública y 1000 ETH de gas, cuentas que hemos usado en las pruebas locales.
 \end{itemize}
 \section{Conexión a la Base de Datos: Ethers.js}
-En aplicaciones tradicionales, el backend utiliza diversos drivers para comunicarse con la base de datos. En TraDeck, esta función la cumple \textbf{Ethers.js}. 
+En aplicaciones tradicionales, el backend utiliza diversos drivers para comunicarse con la base de datos. En TraDeck, esta función la cumple \textbf{Ethers.js} \cite{ethers_docs}. 
 
 Esta librería actúa como el puente de comunicación entre nuestra interfaz frontend y el nodo de la blockchain de Ethereum. Permite inyectar el proveedor criptográfico del usuario (como MetaMask), firmar las transacciones de escritura (modificaciones de estado en los Smart Contracts) y realizar consultas de lectura gratuitas (como leer el balance de un usuario).
 
@@ -31,28 +31,46 @@ Se ha seleccionado \textbf{MetaMask} \cite{metamask_docs} como el proveedor inye
 \subsection{El concepto de Injected Provider}
 Técnicamente, un \textit{Injected Provider} es un objeto JavaScript (estandarizado bajo la propuesta \textbf{EIP-1193} \cite{eip1193}) que las extensiones de billetera como MetaMask introducen en el espacio de nombres global del navegador (\texttt{window.ethereum}). 
 
-Funciona, en esencia, como una capa de abstracción: permite que la dApp realice consultas y solicite firmas sin que los scripts de la página web tenga acceso directo a las claves privadas del usuario. Al no haber servidor backend tradicional es el frontend el encargado de hablar con la blockchain directamente, pero el blockchain ni puede (ni debe) guardar las claves privadas del usuario, ya que sería un agujero de seguridad brutal.
+Funciona, en esencia, como una capa de abstracción: permite que la dApp realice consultas y solicite firmas sin que los scripts de la página web tenga acceso directo a las claves privadas del usuario. Al no haber servidor backend tradicional es el frontend el encargado de hablar con la blockchain directamente, pero el frontend no puede (ni debe) guardar las claves privadas del usuario, ya que sería un agujero de seguridad brutal.
 
 
 \section{Validación y Testing}
 Para garantizar que nuestra base de datos distribuida se comporta correctamente ante fallos (por ejemplo, transacciones atómicas que deben revertirse), se han implementado tests unitarios en \textbf{Mocha} y \textbf{Chai}. Estas pruebas simulan múltiples usuarios (cuentas generadas por Hardhat) interactuando con el mercado, verificando que los estados del protocolo \textit{Escrow} se cumplen.
 
 \section{Interfaz de Usuario}
-La interfaz ha sido diseñada para abstraer la complejidad de la blockchain. A continuación se muestran capturas de los módulos principales:
+La interfaz de TraDeck ha sido diseñada para mantener simplicidad, para evitar al usuario los problemas de lidiar directamente con una cadena de bloques.
 
-% AQUI TENEMOSQ UE METER IMAGENES. 
-% Subir capturas a la carpeta img/ y cambiar los nombres de los archivos.
-
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
-	% \includegraphics[width=0.8\textwidth]{img/captura_mercado.png}
-	\caption{Vista principal del mercado descentralizado de TraDeck.}
+	\includegraphics[width=0.8\textwidth]{img/index.jpg}
+	\caption{Página de inicio de TraDeck: Punto de entrada y conexión con el proveedor inyectado.}
+	\label{fig:index}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{img/crear.jpg}
+	\caption{Módulo de Minting: Interfaz para la persistencia de nuevos activos en IPFS y Blockchain.}
+	\label{fig:crear}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{img/mercado.jpg}
+	\caption{Mercado Descentralizado: Visualización de ofertas activas en el Smart Contract.}
 	\label{fig:mercado}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
-	% \includegraphics[width=0.8\textwidth]{img/captura_intercambio.png}
-	\caption{Interfaz de propuesta de intercambio atómico (Trueque).}
-	\label{fig:intercambio}
+	\includegraphics[width=0.8\textwidth]{img/micoleccion.jpg}
+	\caption{Gestión de Inventario: Consulta en tiempo real de la propiedad de los tokens ERC-721.}
+	\label{fig:coleccion}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{img/trazabilidad.jpg}
+	\caption{Historial de Trazabilidad: Registro inmutable de transacciones y cambios de estado del activo.}
+	\label{fig:trazabilidad}
 \end{figure}
