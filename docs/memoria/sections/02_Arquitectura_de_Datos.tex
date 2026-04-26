@@ -3,9 +3,14 @@
 En este capítulo se detalla la arquitectura de persistencia de TraDeck, analizando cómo se utiliza la red Ethereum y diversos sistemas descentralizados para el modelado y la custodia de activos digitales. A diferencia de las arquitecturas tradicionales basadas en servidores centrales, TraDeck delega la integridad de los datos en un \textit{ledger} distribuido e inmutable\textbf{\cite{ethereum_whitepaper}}.
 
 \section{Verificación de autenticidad mediante el histórico de bloques}
-La autenticidad de un item en la cadena de bloques no depende de una autoridad central, es descentralizado, en nuestro caso, la autenticidad de una carta en TraDeck. Cada activo, tokenizado como un token no fungible (NFT) tiene un identificador cuya validez se verifica mediante la continuidad del libro contable, el ledger.
+En TraDeck, la autenticidad de una carta digital no depende de un servidor o autoridad central que 
+certifique su validez, sino del consenso de una red descentralizada. Cada activo, representado como 
+un token no fungible (NFT), posee un identificador único cuya legitimidad está respaldada exclusivamente 
+por la continuidad e inmutabilidad del libro contable distribuido (\textit{ledger}).
 
-Si definimos un bloque como $B_n$, su validez está condicionada por la inclusión del identificador único del bloque anterior, creando una estructura de punteros \textit{hash}. Formalmente, un bloque se define como:
+Si definimos un bloque como $B_n$, su validez está condicionada por la inclusión del identificador 
+único del bloque anterior, creando una estructura de punteros \textit{hash}. Formalmente, un bloque 
+se define como:
 
 \begin{equation}
 	B_n = \{T_x, \text{MerkleRoot}, \text{Hash}(B_{n-1}), \text{Timestamp}\}
