@@ -1,0 +1,80 @@
+\chapter{Manuales de Despliegue y Usuario}\label{cap:manuales}
+
+\section{Introducción}
+Este capítulo sirve como guía para desplegar la dApp TraDeck. 
+
+Se proporcionará, además, un despliegue en línea con el fin de evitar los problemas para desplegarlo local. Es importante destacar que, al utilizar servicios de alojamiento gratuitos, la infraestructura puede entrar en estado de reposo tras periodos de inactividad. Recomendamos encarecidamente que usen el despliegue en línea ya que la aplicación necesita de muchas claves y variables de entorno y, si usan la web desplegada, tan solo necesitarán realizar los pasos finales de instalar MetaMask y conseguir Sepolia con un faucet.
+
+Para garantizar un funcionamiento del \textbf{100\%} de las capacidades de la aplicación se recomienda abrir la capa de servicio y esperar a que redirija automáticamente a la capa de aplicación. Hemos añadido un ping a la capa de aplicación en caso de que el redirect no funcione, por lo que abrir la capa de aplicación debería también despertar a la capa de servicio.
+
+\begin{itemize}
+	\item \textbf{Capa de Servicio (Proxy):} \url{https://tradeck.onrender.com/}
+	\item \textbf{Capa de Aplicación (Frontend):} \url{https://tradeck.vercel.app/}
+\end{itemize}
+
+\textit{Nota de uso:} Debido a que estamos usando la capa gratuita de los servicios, es aconsejable acceder primero a la URL del proxy. Una vez que el servicio de Render se haya activado (despertado), se producirá la redirección automática al frontend, asegurando que la comunicación con los servicios de IPFS y las variables de entorno está plenamente operativa.
+
+\section{Manual de Despliegue (Administrador)}
+
+\subsection{Obtención del Código Fuente}
+El primer paso para el despliegue es clonar el repositorio oficial del proyecto:
+\begin{center}
+	\texttt{git clone https://github.com/rafseggom/TraDeck}
+\end{center}
+
+El sistema requiere la configuración de múltiples variables de entorno para orquestar la comunicación entre la Blockchain, el almacenamiento IPFS y la interfaz.
+
+\subsection{Configuración de Variables de Entorno (.env)}
+Se deben configurar archivos \texttt{.env} tanto en la raíz del \texttt{backend} como en el \texttt{frontend} con las siguientes variables críticas:
+
+\textbf{En el Backend:}
+\begin{itemize}
+	\item \texttt{SEPOLIA\_RPC\_URL}: URL del nodo (ej. Alchemy).
+	\item \texttt{PRIVATE\_KEY}: Clave privada del administrador para el despliegue.
+	\item \texttt{PINATA\_JWT}: Token de acceso para la persistencia en IPFS.
+	\item \texttt{ALCHEMY\_API\_KEY}: Clave para la comunicación con la red Ethereum.
+\end{itemize}
+
+\textbf{En el Frontend (Sincronización automática):}
+Variables gestionadas por los scripts de sincronización (\texttt{VITE\_LOCAL\_*} para Localhost y \texttt{VITE\_SEPOLIA\_*} para Sepolia) que referencian las direcciones de:
+\begin{itemize}
+	\item \texttt{TRADECK\_COIN}: Dirección del contrato ERC-20.
+	\item \texttt{TRADECK\_NFT}: Dirección del contrato ERC-721.
+	\item \texttt{DEPLOY\_BLOCK}: Bloque de inicio para la escucha de eventos.
+\end{itemize}
+
+\subsection{Escenario A: Despliegue Local Automático (Windows)}
+Para agilizar el despliegue, se ha desarrollado un script que despliega en local automáticamente. Desde la raíz del repositorio, se debe ejecutar:
+\begin{center}
+	\texttt{start-local.cmd}
+\end{center}
+Este script realiza de forma secuencial: instalación de dependencias (\texttt{npm install}), levantamiento del nodo local Hardhat, despliegue de contratos, sincronización de direcciones en el frontend, arranque del proxy de Pinata y lanzamiento del servidor de desarrollo Vite. 
+
+\subsection{Escenario B: Despliegue en Red Sepolia}
+Para actualizar o desplegar los contratos en la red pública de pruebas, se utiliza el script de sincronización optimizado:
+\begin{center}
+	\texttt{npm run deploy:sepolia:sync}
+\end{center}
+Este comando garantiza que, tras la migración con \textit{Hardhat Ignition}, las nuevas direcciones de los contratos sean inyectadas automáticamente en el archivo \texttt{.env} del frontend, evitando errores manuales de configuración.
+
+\section{Manual de Usuario}
+\subsection{Configuración de MetaMask}
+Para interactuar con TraDeck, el usuario debe configurar su monedero según el entorno:
+\begin{itemize}
+	\item \textbf{Localhost:} Conectar a \texttt{http://127.0.0.1:8545} (Chain ID: 31337) e importar una de las claves privadas proporcionadas por Hardhat.
+	\item \textbf{Sepolia:} Seleccionar la red de pruebas Sepolia y disponer de ETH de prueba desde un \textit{faucet} oficial (ej. Alchemy o Google Cloud). Recomendamos \url{https://sepolia-faucet.pk910.de/} ya que permite obtener ETH casi de forma continuada, pudiendo rellenar varias carteras con ETH en un mismo día.
+\end{itemize}
+
+\subsection{Flujos de Operación}
+\begin{itemize}
+	\item \textbf{Gestión de Fondos (Airdrop):} Los nuevos usuarios pueden invocar la función \texttt{airdrop()} para obtener 1.000 TDC iniciales.
+	\item \textbf{Marketplace y Escrow:} Al comprar una carta, el contrato retiene el pago. El vendedor solo recibe los fondos cuando el comprador firma la función \texttt{confirmDelivery}.
+	\item \textbf{Trueque Atómico:} Los intercambios se proponen y aceptan mediante \texttt{proposeSwap} y \texttt{acceptSwap}, garantizando la atomicidad total de la transacción (cambio de titularidad de ambos NFTs en un solo bloque).
+\end{itemize}
+
+\subsection{Demostración en Vídeo}
+Para facilitar la evaluación y visualización de las capacidades de TraDeck sin necesidad de configurar el entorno criptográfico, se ha preparado un vídeo de demostración donde se recorren los flujos principales (Conexión, Minting, Compraventa y Trueque):
+
+\begin{center}
+	\textbf{Enlace a la Demo:} \url{https://youtu.be/GzI2yNninhk}
+\end{center}

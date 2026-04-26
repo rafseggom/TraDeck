@@ -1,0 +1,93 @@
+\chapter{Introducción}\label{cap:introduccion}
+
+Este primer capítulo expone el contexto actual del mercado de cartas coleccionables, la motivación 
+detrás del proyecto y los objetivos principales que se persiguen con el desarrollo de TraDeck.
+
+\section{Contexto y Motivación}
+El mercado de los Juegos de Cartas Coleccionables (Trading Card Games o TCG, por sus siglas en inglés) ha experimentado un 
+crecimiento exponencial en los últimos años, con millones de jugadores y coleccionistas en todo el mundo, 
+transformándose de un nicho de entretenimiento a un mercado de activos con un valor significativo.
+
+Sin embargo, este auge ha traído consigo desafíos tanto para los jugadores como para los coleccionistas, entre 
+ellos:
+
+\begin{itemize}
+    \item \textbf{Falsificaciones:} La dificultad para autenticar cartas físicas sin depender de agencias 
+    externas como Beckett o PSA, las cuales pueden ser costosas y no siempre accesibles para todos los usuarios.
+    \item \textbf{Falta de Confianza en la Transacción:} El riesgo de fraude en la compra y venta de cartas,
+    especialmente en plataformas de segunda mano, donde la verificación de la autenticidad es limitada.
+    \item \textbf{Dificultad para Coleccionistas:} La falta de herramientas accesibles para que los coleccionistas 
+    puedan gestionar y autenticar sus colecciones de manera eficiente y segura.
+\end{itemize}
+
+Ante esta situación, surge la necesidad de una solución tecnológica que permita a los usuarios autenticar sus cartas 
+de manera rápida, confiable y accesible, sin depender de terceros costosos o procesos complicados. 
+
+\section{Estado del Arte y Tecnologías Investigadas}
+
+Para abordar estos desafíos, se ha investigado el paradigma de la Web3 y las tecnologías de registro descentralizado \textbf{\cite{ethereum_org}},
+como blockchain, que ofrecen una solución prometedora para la autenticación y gestión de activos digitales. Tradicionalmente,
+una base de datos centralizada podría gestionar un mercado de cartas, pero esto introduce riesgos de seguridad y confianza. 
+En contraste, una solución basada en blockchain permite a los usuarios tener control total sobre sus activos digitales, 
+garantizando la autenticidad y la transparencia en las transacciones.
+
+La investigación nos ha llevado a plantear una arquitectura híbrida que se apoya en dos pilares fundamentales:
+\begin{itemize}
+    \item \textbf{Capa de Titularidad (Blockchain):} Uso de la red Ethereum mediante contratos inteligentes para registrar 
+    la titularidad de las cartas. Se investigaron los estándares ERC-721 (Tokens No Fungibles) y ERC-20 (para la economía 
+    interna) para representar cada carta como un activo digital único, garantizando su autenticidad y trazabilidad.
+    \item \textbf{Capa de Almacenamiento (IPFS):} Nos dimos cuenta de que almacenar imágenes y metadatos de las cartas 
+    directamente en la blockchain sería costoso e ineficiente. Por ello, se investigó el uso de IPFS (InterPlanetary File
+    System) \textbf{\cite{ipfs_docs}} para almacenar de manera descentralizada los datos asociados a cada carta, asegurando su disponibilidad y 
+    resistencia a la censura.
+\end{itemize}
+
+%Respuesta a por qué no se ha utilizado el ERC-1155: "Lo evaluamos durante la fase de investigación, pero lo descartamos 
+%por la naturaleza de nuestro modelo de negocio. TraDeck certifica cartas coleccionables donde el estado físico y el número 
+%de serie son cruciales. El ERC-1155 está optimizado para 'ediciones' o lotes de objetos idénticos, mientras que nosotros 
+%necesitábamos la trazabilidad 1 a 1 estricta que proporciona el ERC-721. Además, separar la lógica en dos contratos 
+%(ERC-20 y 721) nos permitió aplicar el principio de responsabilidad única, haciendo que el patrón Escrow fuera mucho más 
+%seguro y fácil de auditar."
+
+\section{Objetivos del Proyecto}
+
+Para dar respuesta a la problemática planteada y validar la viabilidad de la solución propuesta, se han definido los siguientes
+objetivos:
+
+\begin{itemize}
+    \item \textbf{Desarrollar un mercado P2P descentralizado:} Crear una plataforma que permita a los usuarios comprar, 
+    vender e intercambiar cartas coleccionables de manera segura y transparente, sin intermediarios.
+    \item \textbf{Diseñar un protocolo de custodia:} Desarrollar contratos inteligentes que garanticen la seguridad y la atomicidad de las 
+    transacciones, protegiendo tanto a compradores como a vendedores de posibles fraudes o incumplimientos.
+    \item \textbf{Implementar un modelo de almacenamiento eficiente:} Integrar IPFS para almacenar los metadatos e imágenes de las cartas,
+    reduciendo los costes transaccionales y asegurando la disponibilidad de la información.
+    \item \textbf{Proporcionar una interfaz de usuario accesible:} Construir una aplicación web reactiva y fácil de usar que 
+    abstraiga la complejidad de la blockchain, permitiendo a los usuarios interactuar con el mercado de forma intuitiva mediante
+    el uso de monederos digitales como MetaMask. 
+
+\end{itemize}
+
+El código fuente íntegro del proyecto, incluyendo los Smart Contracts, el proxy y la interfaz frontend, está disponible de forma pública en el siguiente repositorio de GitHub: \url{https://github.com/rafseggom/TraDeck}.
+
+\section{Planificación y Estimación de Esfuerzo}
+Para la consecución de los objetivos de TraDeck, se ha realizado una gestión de tareas distribuida equitativamente entre los dos integrantes del equipo. Siguiendo las directrices de la asignatura, el proyecto ha requerido una carga de trabajo total de \textbf{60 horas} (30 horas por persona), desglosadas en las siguientes fases:
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|l|c|c|}
+		\hline
+		\textbf{Fase / Tarea} & \textbf{Horas Estimadas} & \textbf{Responsable} \\ \hline
+		Configuración inicial del entorno & 5h & Javi \\ \hline
+		Investigación y Diseño de Arquitectura (Blockchain vs SQL) & 10h & Ambos \\ \hline
+		Desarrollo de Smart Contracts (Solidity) y Tests Unitarios & 15h & Javi \\ \hline
+		Desarrollo del Frontend (React, Ethers.js y UI/UX) & 18h & Rafa \\ \hline
+		Integración de Servicios Off-chain (IPFS, Pinata y Proxy) & 7h & Ambos \\ \hline
+		Despliegue (Hardhat, Sepolia, Vercel y Render) & 4h & Rafa \\ \hline
+		Redacción de Memoria Técnica y Documentación & 6h & Ambos \\ \hline
+		\textbf{Total de horas de trabajo} & \textbf{65h} & \\ \hline
+	\end{tabular}
+	\caption{Desglose de horas y reparto de tareas por fase del proyecto.}
+	\label{tab:planificacion}
+\end{table}
+
+Es importante destacar que hemos dedicado mucho tiempo, que no hemos querido añadir a las estimaciones, a investigación y decisiones técnica: aprender sobre la blockchain, qué alcance podría tener nuestro proyecto, como tokenizar las cartas, experimentar y hacer pruebas, ver cómo de vialbe es, tecnología a usar (Remix vs HardHat), etc. 

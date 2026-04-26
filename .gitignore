@@ -47,3 +47,17 @@ node_modules
 
 .gemini
 .planning
+
+*.aux
+*.bbl
+*.blg
+*.brf
+*.fls
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.lot
+*.lof
+*.lol
+memoria.pdf

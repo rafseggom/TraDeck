@@ -1,0 +1,47 @@
+\chapter{Conclusiones}\label{cap:conclusiones}
+
+\section{Consecución de Objetivos}
+Tras la finalización del desarrollo de TraDeck, se puede afirmar que se han alcanzado satisfactoriamente los objetivos planteados en la fase de diseño:
+
+\begin{itemize}
+	\item \textbf{Mercado P2P funcional}: Se ha logrado implementar una plataforma donde los usuarios pueden interactuar directamente para el intercambio de activos, las cartas NFT, sin intermediarios centrales.
+	\item \textbf{Seguridad y Custodia}: El uso de contratos inteligentes con protocolos \textit{Escrow} y \textit{Atomic Swaps} garantiza que las transacciones sean seguras y atómicas, protegiendo la integridad de los activos.
+	\item \textbf{Persistencia Híbrida Eficiente}: Se ha validado la arquitectura que combina el \textit{ledger} de Ethereum para la titularidad y la red IPFS para los datos multimedia, optimizando drásticamente los costes de almacenamiento.
+	\item \textbf{Accesibilidad Web3}: La interfaz desarrollada permite una interacción fluida con la blockchain mediante MetaMask, abstrayendo la complejidad técnica para el usuario final.
+\end{itemize}
+
+\section{Limitaciones del Sistema}
+A pesar del éxito del prototipo, se han identificado limitaciones críticas que definen el estado actual de la tecnología:
+
+\begin{itemize}
+	\item \textbf{Latencia en la Recuperación de Datos Históricos}: Durante la implementación, se detectó un cuello de botella al 
+	consultar el estado de las cartas mediante eventos. Inicialmente, la búsqueda era progresiva, por lo que la latencia era
+	imperceptible, pero a medida que los activos quedaban "hundidos" miles de bloques atrás en la cadena, la respuesta 
+	del frontend se volvía inaceptable, hasta 720 llamadas a la cadena hicieron falta para conseguir una sola carta. Esto obligó 
+	a una refactorización hacia el uso de estructuras de datos optimizadas (como el patrón DTO \textit{CardData}, \textit{struct} 
+	en los contratos) para realizar consultas directas al estado del contrato en una sola petición RPC.
+	\item \textbf{Dependencia de Proveedores}: Aunque el sistema es descentralizado, la experiencia de usuario actual depende de la disponibilidad de servicios de alojamiento gratuitos para el proxy y el frontend, los cuales pueden entrar en modo reposo.
+	\item \textbf{Costes de Gas}: En la red principal, el coste de las transacciones de escritura sigue siendo un factor limitante para operaciones de bajo valor.
+\end{itemize}
+
+\section{Trabajo Futuro}
+Para evolucionar TraDeck hacia un producto comercial, se proponen las siguientes líneas de mejora:
+
+\begin{itemize}
+	\item \textbf{Migración a Capa 2 (L2)}: Implementar el sistema en redes como Optimism o Arbitrum para reducir 
+	los costes de gas en más de un 90\%. Es decir, saltar de una testnet como Sepolia a operar en un entorno de producción real (\textit{Mainnet}).
+	\item \textbf{Gobernanza mediante DAO (Organizaciones Autónomas Descentralizadas)}: Permitir que la comunidad decida sobre la creación de nuevas colecciones o modificaciones en las reglas del mercado.
+	\item \textbf{Integración de Oráculos}: Utilizar servicios como Chainlink para verificar el valor de mercado externo de las cartas y ofrecer estadísticas en tiempo real.
+	\item \textbf{Indexación Avanzada}: Implementar \textit{The Graph} para solucionar definitivamente los problemas de latencia en consultas históricas complejas. Fue una idea que nosotros mismos planteamos para el primer prototipo pero descartamos porque subiría la complejidad del proyecto en muchas horas.
+	\item \textbf{Monetización real}: Pasar de nuestra propia moneda, TDC, a usar criptomonedas reales, permitiendo compra venta directamente por la plataforma sin necesidad de servicios externos.
+\end{itemize}
+
+\section{Valoración Personal}
+El desarrollo de este proyecto ha supuesto un desafío técnico importante que ha superado las expectativas iniciales. La carga de trabajo real ha excedido las 60 horas estimadas debido a la curva de aprendizaje de la Web3 y, especialmente, a la resolución de problemas imprevistos de rendimiento en la comunicación con la blockchain. 
+
+El mayor aprendizaje técnico provino de la resolución de cuellos de botella inesperados, como la mencionada refactorización 
+del sistema de lectura para evitar saturar el nodo RPC. Enfrentarse a un entorno donde el código es inmutable y cada operación 
+tiene un coste computacional directo nos ha obligado a aplicar patrones de diseño orientados a la eficiencia extrema, 
+algo que a menudo se pasa por alto en el desarrollo web tradicional.
+
+En conclusión, TraDeck no solo es una plataforma de intercambio, sino una prueba de concepto sólida sobre cómo la inmutabilidad y la descentralización pueden transformar sectores tradicionales como el coleccionismo, haciendo más fiable y veraz el intercambio de activos entre particulares.
