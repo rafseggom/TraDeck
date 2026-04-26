@@ -1,0 +1,59 @@
+\chapter{Diseño de la solución}\label{cap:diseño}
+
+\section{Introducción}
+En este capítulo explicaremos la arquitectura lógica y el diseño de los componentes 
+que integran el ecosistema TraDeck, centrándonos en la interacción entre la capa de 
+persistencia descentralizada (blockchain) y la lógica de negocio implementada en los 
+contratos inteligentes.
+
+
+\section{Arquitectura del Backend: Smart Contracts}
+El núcleo de TraDeck se fundamenta en una arquitectura de contratos inteligentes componibles, 
+desarrollados en Solidity y desplegados sobre la red Ethereum (simulada en entorno local mediante Hardhat). 
+El sistema separa la lógica financiera de la lógica de propiedad para garantizar una mayor modularidad.
+
+\subsection{Capa Financiera: TraDeckCoin (TDKC)}
+Para mitigar la volatilidad inherente a las criptomonedas nativas (como el Ether), se ha diseñado un 
+token de utilidad basado en el estándar ERC-20.
+
+\begin{itemize}
+    \item \textbf{Propósito:} Actuar como medio de intercambio dentro del ecosistema TraDeck, permitiendo a 
+        los usuarios comprar y vender cartas sin necesidad de manejar directamente Ether.
+    \item \textbf{Medio de obtención:} Se integra una función \textit{Airdrop} que permite a los usuarios 
+        obtener una cantidad inicial de TDKC de forma gratuita, facilitando la adopción y el testing.
+\end{itemize}
+
+
+\subsection{Capa de Activos: TraDeckNFT}
+El contrato principal hereda el estándar ERC-721 para gestionar la emisión (\textit{Minting}) de las cartas. 
+Su diseño incluye un motor de mercado integrado.
+
+\subsubsection{Protocolo de Custodia - Escrow}
+Para garantizar transacciones seguras P2P sin intermediarios, se ha diseñado una máquina de estados para el 
+flujo de venta:
+
+\begin{enumerate}
+    \item \textbf{Listado:} Al invocar \texttt{listForSale}, el vendedor transfiere temporalmente la propiedad de 
+        su NFT al propio contrato inteligente (\texttt{address(this)}). Esto garantiza al comprador que el activo 
+        existe y está disponible. 
+    \item \textbf{Compromiso de Compra:} El comprador ejecuta \texttt{buyCard}, depositando los fondos necesarios en el contrato. 
+        El contrato retiene tanto el NFT como el dinero, alcanzando el estado de \textit{InEscrow}.
+    \item \textbf{Liquidación Atómica:} Mediante la función \texttt{confirmDelivery}, se cierra la operación. El 
+        contrato ejecuta una transacción atómica donde transfiere los fondos al vendedor y el activo al comprador 
+        de forma simultánea. Si cualquiera de las dos transferencias falla, la operación completa se revierte.
+\end{enumerate}
+
+\subsection{Seguridad y Mitigación de Riesgos}
+El diseño incorpora reglas estrictas de seguridad a nivel de protocolo:
+\begin{itemize}
+    \item \textbf{Validación de Identidad:} El sistema prescinde de contraseñas tradicionales, utilizando firmas 
+    criptográficas (\texttt{msg.sender}) para autorizar cada escritura en la base de datos distribuida.
+    \item \textbf{Prevención de reentrada:} Implementación del patrón \textit{Checks-Effects-Interactions}. Para 
+    prevenir ataques de reentrada (\textit{Reentrancy Attacks}), las funciones que manejan transferencias de valor 
+    actualizan o borran el estado interno (ej. \texttt{delete trades[tokenId]}) antes de interactuar con contratos 
+    externos o enviar fondos.
+\end{itemize}
+
+
+\section{Conclusiones}
+En este capítulo concluimos que...

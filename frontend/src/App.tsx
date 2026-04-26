@@ -8,8 +8,24 @@ import { DocumentacionPage } from "./pages/DocumentacionPage";
 import { HistorialPage } from "./pages/HistorialPage";
 import { InicioPage } from "./pages/InicioPage";
 import { MercadoPage } from "./pages/MercadoPage";
+import { useEffect } from "react";
+import { PINATA_PROXY_URL } from "./lib/config";
 
 export default function App(): JSX.Element {
+  useEffect(() => {
+    const despertarProxy = async () => {
+      try {
+        const respuesta = await fetch(`${PINATA_PROXY_URL}/health`);
+        if (respuesta.ok) {
+          console.log("✅ Servidor proxy de Render despierto y listo.");
+        }
+      } catch (error) {
+        console.warn("⏳ Despertando servidor proxy en segundo plano...", error);
+      }
+    };
+
+    despertarProxy();
+  }, []);
   return (
     <AppProvider>
       <BrowserRouter>
